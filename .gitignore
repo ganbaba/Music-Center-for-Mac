@@ -1,0 +1,19 @@
+# macOS and Xcode local state
+.DS_Store
+xcuserdata/
+*.xcuserstate
+
+# Build products
+Build/
+DerivedData/
+*.app
+*.dSYM/
+*.xcarchive
+
+# Local library data and backups
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.musiccenterbackup
+Preferences.json
+Preferences.json.backup
