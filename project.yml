@@ -1,0 +1,20 @@
+name: MusicCenterUIRecreation
+options:
+  deploymentTarget:
+    macOS: "14.0"
+targets:
+  MusicCenterUIRecreation:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+      - path: Resources
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_NAME: Music Center UI Preview
+        PRODUCT_BUNDLE_IDENTIFIER: local.musiccenter.uirecreation
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual

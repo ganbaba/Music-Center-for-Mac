@@ -1,0 +1,392 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7E920A3362194FDBAA935C2C /* MountedVolume.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B5FC7D090854B07B12F9E04 /* MountedVolume.swift */; };
+		4B33327E18AB474486485339 /* AlbumLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66C292DB54B84043BC13CF1F /* AlbumLookup.swift */; };
+		D75A141C4D5444F784E3BF8B /* AudioDisc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012569519BAF4FB5AF7A1A1F /* AudioDisc.swift */; };
+		C293F2673A0842B2B81F4CF9 /* AudioExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BDF4D27EEF341B6AC908A5B /* AudioExport.swift */; };
+		986ABB15ECC348429DD22DA8 /* AudioOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD6DBA179C043B4BBAE65F4 /* AudioOutput.swift */; };
+		7E0B33780E1641EC8BCC2FB9 /* WalkmanManagement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9424B2BD3B424A1DB3FB1A27 /* WalkmanManagement.swift */; };
+		9AF8FB29FDEF41C09529995E /* WalkmanAAC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58ED9A668F724413B32CC517 /* WalkmanAAC.swift */; };
+        18E44BD850804D7C9A25A063 /* PreviewPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528669EE900D499C8D468C01 /* PreviewPreferences.swift */; };
+		06CE41C29E4E36EADC035590 /* Library.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8E8863C602B77B7BB11246 /* Library.swift */; };
+		11A5C4C2C4BE94BA91324541 /* MainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A13E9C97F4B7898F4CEE3BF /* MainMenu.swift */; };
+		1F65C3A9D3E2835C49E3DEBF /* AudioPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFAEAD7CBDF446843FBC0478 /* AudioPanels.swift */; };
+		2C9F64CCFC69A8EC39CBEA33 /* TrackTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C5C650E175174A89BB5193 /* TrackTags.swift */; };
+		32ADC83DF752EB575B7D3426 /* PreviewApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7B4314CAA3AFD9B5A0BC17 /* PreviewApp.swift */; };
+		617DBBBE7B0FBE08D473FE5A /* WalkmanPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD3A126843E47826855A05EE /* WalkmanPreview.swift */; };
+		80727E0AF47B09D83944A5F2 /* TrackMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BFE03155F660367989C9B50 /* TrackMenu.swift */; };
+		818D30422FC6B32670000F35 /* VolumeTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB240C5C0823EFB3C05FC397 /* VolumeTransfer.swift */; };
+		952713D4B95E2D66C29F874C /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C8CBAC6D483A3CEEA9EBDD0 /* Player.swift */; };
+		9F97AC87833091F9AA8EC564 /* CapturedLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8DB2F5655AC495A93AD024C /* CapturedLibrary.swift */; };
+		AE9140593A1FB6AC27E14EE0 /* PrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF301F06E9219080DE216BE /* PrototypeView.swift */; };
+		B6779CF87D32CFD3E85869C5 /* AdditionalSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = F414C7156DCA6C5700015552 /* AdditionalSettings.swift */; };
+		C4AECF795957E26F7076B895 /* CapturedCover.png in Resources */ = {isa = PBXBuildFile; fileRef = BB1087567945E90E5E27D0A4 /* CapturedCover.png */; };
+		C6EE30DBB11336B531210940 /* SettingsPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9D326FAD765E5CA8226FDD3 /* SettingsPreview.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		6B5FC7D090854B07B12F9E04 /* MountedVolume.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MountedVolume.swift; sourceTree = "<group>"; };
+		66C292DB54B84043BC13CF1F /* AlbumLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumLookup.swift; sourceTree = "<group>"; };
+		012569519BAF4FB5AF7A1A1F /* AudioDisc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDisc.swift; sourceTree = "<group>"; };
+		7BDF4D27EEF341B6AC908A5B /* AudioExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioExport.swift; sourceTree = "<group>"; };
+		2AD6DBA179C043B4BBAE65F4 /* AudioOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutput.swift; sourceTree = "<group>"; };
+		9424B2BD3B424A1DB3FB1A27 /* WalkmanManagement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkmanManagement.swift; sourceTree = "<group>"; };
+		58ED9A668F724413B32CC517 /* WalkmanAAC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkmanAAC.swift; sourceTree = "<group>"; };
+        528669EE900D499C8D468C01 /* PreviewPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPreferences.swift; sourceTree = "<group>"; };
+		0DF301F06E9219080DE216BE /* PrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeView.swift; sourceTree = "<group>"; };
+		1C8CBAC6D483A3CEEA9EBDD0 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		2BFE03155F660367989C9B50 /* TrackMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackMenu.swift; sourceTree = "<group>"; };
+		2F8E8863C602B77B7BB11246 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
+		3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicCenterUIRecreation.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A13E9C97F4B7898F4CEE3BF /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
+		AFAEAD7CBDF446843FBC0478 /* AudioPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPanels.swift; sourceTree = "<group>"; };
+		B9D326FAD765E5CA8226FDD3 /* SettingsPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreview.swift; sourceTree = "<group>"; };
+		BB1087567945E90E5E27D0A4 /* CapturedCover.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = CapturedCover.png; sourceTree = "<group>"; };
+		CB240C5C0823EFB3C05FC397 /* VolumeTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VolumeTransfer.swift; sourceTree = "<group>"; };
+		D8DB2F5655AC495A93AD024C /* CapturedLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapturedLibrary.swift; sourceTree = "<group>"; };
+		DD3A126843E47826855A05EE /* WalkmanPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalkmanPreview.swift; sourceTree = "<group>"; };
+		DD7B4314CAA3AFD9B5A0BC17 /* PreviewApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewApp.swift; sourceTree = "<group>"; };
+		F414C7156DCA6C5700015552 /* AdditionalSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalSettings.swift; sourceTree = "<group>"; };
+		F5C5C650E175174A89BB5193 /* TrackTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTags.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		02EE605858D21B10260FFEC6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0EC1A22342E6E0FC7D8403E6 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				F414C7156DCA6C5700015552 /* AdditionalSettings.swift */,
+				AFAEAD7CBDF446843FBC0478 /* AudioPanels.swift */,
+				D8DB2F5655AC495A93AD024C /* CapturedLibrary.swift */,
+				2F8E8863C602B77B7BB11246 /* Library.swift */,
+				5A13E9C97F4B7898F4CEE3BF /* MainMenu.swift */,
+				1C8CBAC6D483A3CEEA9EBDD0 /* Player.swift */,
+				DD7B4314CAA3AFD9B5A0BC17 /* PreviewApp.swift */,
+                528669EE900D499C8D468C01 /* PreviewPreferences.swift */,
+				0DF301F06E9219080DE216BE /* PrototypeView.swift */,
+				B9D326FAD765E5CA8226FDD3 /* SettingsPreview.swift */,
+				2BFE03155F660367989C9B50 /* TrackMenu.swift */,
+				F5C5C650E175174A89BB5193 /* TrackTags.swift */,
+				CB240C5C0823EFB3C05FC397 /* VolumeTransfer.swift */,
+				DD3A126843E47826855A05EE /* WalkmanPreview.swift */,
+				6B5FC7D090854B07B12F9E04 /* MountedVolume.swift */,
+				66C292DB54B84043BC13CF1F /* AlbumLookup.swift */,
+				012569519BAF4FB5AF7A1A1F /* AudioDisc.swift */,
+				7BDF4D27EEF341B6AC908A5B /* AudioExport.swift */,
+				2AD6DBA179C043B4BBAE65F4 /* AudioOutput.swift */,
+				9424B2BD3B424A1DB3FB1A27 /* WalkmanManagement.swift */,
+				58ED9A668F724413B32CC517 /* WalkmanAAC.swift */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		11478D52327B1A8A2B3EDBD8 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB1087567945E90E5E27D0A4 /* CapturedCover.png */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		917FCFEF038692A5B4B3C893 = {
+			isa = PBXGroup;
+			children = (
+				11478D52327B1A8A2B3EDBD8 /* Resources */,
+				0EC1A22342E6E0FC7D8403E6 /* Sources */,
+				02EE605858D21B10260FFEC6 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B209617C1C8F2A00B4AB2E85 /* MusicCenterUIRecreation */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterUIRecreation" */;
+			buildPhases = (
+				140D93E25F085C43D0892C85 /* Sources */,
+				676D68A18D5C3F2CCD8EF0AC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MusicCenterUIRecreation;
+			packageProductDependencies = (
+			);
+			productName = MusicCenterUIRecreation;
+			productReference = 3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		83FB22BEFFE654CDEDB9940E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					B209617C1C8F2A00B4AB2E85 = {
+						ProvisioningStyle = Manual;
+					};
+				};
+			};
+			buildConfigurationList = 020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterUIRecreation" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 917FCFEF038692A5B4B3C893;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 02EE605858D21B10260FFEC6 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B209617C1C8F2A00B4AB2E85 /* MusicCenterUIRecreation */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		676D68A18D5C3F2CCD8EF0AC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C4AECF795957E26F7076B895 /* CapturedCover.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		140D93E25F085C43D0892C85 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B6779CF87D32CFD3E85869C5 /* AdditionalSettings.swift in Sources */,
+				1F65C3A9D3E2835C49E3DEBF /* AudioPanels.swift in Sources */,
+				9F97AC87833091F9AA8EC564 /* CapturedLibrary.swift in Sources */,
+				06CE41C29E4E36EADC035590 /* Library.swift in Sources */,
+				11A5C4C2C4BE94BA91324541 /* MainMenu.swift in Sources */,
+				952713D4B95E2D66C29F874C /* Player.swift in Sources */,
+				32ADC83DF752EB575B7D3426 /* PreviewApp.swift in Sources */,
+                18E44BD850804D7C9A25A063 /* PreviewPreferences.swift in Sources */,
+				AE9140593A1FB6AC27E14EE0 /* PrototypeView.swift in Sources */,
+				C6EE30DBB11336B531210940 /* SettingsPreview.swift in Sources */,
+				80727E0AF47B09D83944A5F2 /* TrackMenu.swift in Sources */,
+				2C9F64CCFC69A8EC39CBEA33 /* TrackTags.swift in Sources */,
+				818D30422FC6B32670000F35 /* VolumeTransfer.swift in Sources */,
+				617DBBBE7B0FBE08D473FE5A /* WalkmanPreview.swift in Sources */,
+				7E920A3362194FDBAA935C2C /* MountedVolume.swift in Sources */,
+				4B33327E18AB474486485339 /* AlbumLookup.swift in Sources */,
+				D75A141C4D5444F784E3BF8B /* AudioDisc.swift in Sources */,
+				C293F2673A0842B2B81F4CF9 /* AudioExport.swift in Sources */,
+				986ABB15ECC348429DD22DA8 /* AudioOutput.swift in Sources */,
+				7E0B33780E1641EC8BCC2FB9 /* WalkmanManagement.swift in Sources */,
+				9AF8FB29FDEF41C09529995E /* WalkmanAAC.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1894F24C3706F6EE73AE5122 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
+				PRODUCT_NAME = "Music Center UI Preview";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		37DBE5DF01ECB1B13F85D381 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		3C88C10ACDD9B95A8B21BB42 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D7CC2F43560117FE6F00D94B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
+				PRODUCT_NAME = "Music Center UI Preview";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterUIRecreation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37DBE5DF01ECB1B13F85D381 /* Debug */,
+				3C88C10ACDD9B95A8B21BB42 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterUIRecreation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D7CC2F43560117FE6F00D94B /* Debug */,
+				1894F24C3706F6EE73AE5122 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 83FB22BEFFE654CDEDB9940E /* Project object */;
+}
