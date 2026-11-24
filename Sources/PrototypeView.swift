@@ -182,8 +182,19 @@ struct PrototypeView: View {
                 }
             }
         }
-        .sheet(isPresented: Binding(get: { audioPanel == .equalizer }, set: { if !$0 { audioPanel = nil } })) {
-            EqualizerPanel(settings: $equalizer, close: { audioPanel = nil })
+        .overlay {
+            if audioPanel == .equalizer {
+                GeometryReader { geometry in
+                    let scale = min(1, (geometry.size.width - 24) / 660, (geometry.size.height - 24) / 408)
+                    ZStack {
+                        Color(white: 0.93).opacity(0.68)
+                        EqualizerPanel(settings: $equalizer, close: { audioPanel = nil })
+                            .scaleEffect(scale)
+                            .frame(width: 660 * scale, height: 408 * scale)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
         }
         .background {
             Group {
@@ -211,11 +222,11 @@ struct PrototypeView: View {
         .overlay {
             if let settingsPage {
                 GeometryReader { geometry in
-                    let scale = min(1, (geometry.size.width - 24) / 710, (geometry.size.height - 24) / 690)
+                    let scale = min(1, (geometry.size.width - 24) / 710)
+                    let panelHeight = min(690, (geometry.size.height - 24) / scale)
                     ZStack {
                         Color(white: 0.93).opacity(0.68)
-                        SettingsPreview(page: settingsPage, settings: settings, outputDevices: player.outputs,
-                                        defaultOutput: player.outputs.first { $0.deviceID == player.defaultOutput }?.id,
+                        SettingsPreview(page: settingsPage, settings: settings, height: panelHeight,
                                         cdDrives: cdDrives, refreshCDDrives: { refreshAudioDisc() }) { updated in
                             do {
                                 if updated.outputDeviceUID != settings.outputDeviceUID || updated.outputSampleRate != settings.outputSampleRate {
@@ -231,7 +242,7 @@ struct PrototypeView: View {
                             self.settingsPage = nil
                         }
                         .scaleEffect(scale)
-                        .frame(width: 710 * scale, height: 690 * scale)
+                        .frame(width: 710 * scale, height: panelHeight * scale)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -1428,7 +1439,7 @@ struct PrototypeView: View {
                 if let directory = settings.cdImportDirectory {
                     beginDiscExport(tracks, disc: disc, directory: directory)
                 } else {
-                    notice = "请先在「从 CD 导入」设置中选择自动导入位置。"
+                    notice = "请先在「导入文件」设置中选择文件目的地。"
                 }
             }
         } catch {

@@ -1,16 +1,14 @@
 # Music Center for PC 2.7.4 · macOS 界面还原原型
 
-当前源码快照更新于 2026-11-24，包含本地曲库与播放、播放列表、均衡器与输出设置、WALKMAN 传输和导回、曲库备份恢复、CD 导入设置和音频导出。光驱下拉控件采用 macOS 原生样式。
+## 2026-11-25 设置页精修快照
 
-使用 macOS 和 Xcode，在项目目录执行以下命令构建。
+11 个设置页按 `Reference-Windows-2026-11-24/` 的 Windows 2.7.4 实机截图重新核对。设置页使用统一的方框复选框、圆形单选框、矩形按钮、带箭头滚动条和 Windows 风格下拉菜单；下拉菜单支持方向键、Home/End、回车与 Escape。面板在小窗口保留文字和控件尺寸，改为缩短内容视口；底部确定、取消按钮固定显示。
 
-```sh
-xcodebuild -project MusicCenterUIRecreation.xcodeproj -scheme MusicCenterUIRecreation -configuration Release -derivedDataPath Build build
-open "Build/Build/Products/Release/Music Center UI Preview.app"
-```
+从 CD 导入的 MP3/AAC 分别提供码率选项和校验；WAV/FLAC 显示参考码率与容量，导入模式按原版禁用。Gracenote 页保留原有文案并提供 16 种语言，自动检索开关控制其三个子项；数据库共享和更新检查也保留各自的启用关系。导入文件页可编辑自动导入文件夹列表及文件目的地，所有更改在点确定前仅为草稿。
 
-MP3 编码及 ATRAC 解码需要已有的 FFmpeg。实体光驱、真实 ATRAC 样本及 WALKMAN 设备端播放尚待验证。后续章节保留项目各阶段的开发与验证记录。
+音频输出页按 Windows 的推荐/手动布局显示，设备选择继续位于顶部音频输出面板。采样率选择作用于现有 Mac 播放处理，新增 352.8/384 kHz；位深、音频跳过选项和 Windows 专属模式说明保留为还原状态，不会修改 macOS 硬件设置。自动文件夹监视、Gracenote/12 Tone Analysis、网络共享、Sony 更新和清除类按钮的实际业务仍未接入；点击相关按钮会说明当前支持范围。没有新增这些后台业务或删除用户数据。
 
+Windows 原图与 Mac 验收图分开保存；逐页结果及实际检查见 `Snapshots/2026-11-25-settings/README.md`。
 
 双击 `Build/Music Center UI Preview.app`，或在 Xcode 打开 `MusicCenterUIRecreation.xcodeproj` 并运行 `MusicCenterUIRecreation` scheme。
 
@@ -68,7 +66,7 @@ Windows 2.7.4 本轮对照图位于 `Reference/view-menu-*.png`、`Reference/dis
 
 「歌曲列表上显示项目」允许移动标题列，标题始终显示。每次从一侧移动列时，原列表选中下一项，末尾则选中上一项。「恢复默认」先更改设置草稿，「确定」后才应用到歌曲表。列配置和拖动后的列宽会在重启后恢复。曲库未采集的字段保留为空。
 
-「歌曲回放」的「所有范围」可从当前专辑或艺术家继续播放当前视图中排在后面的组。「选定范围」只播放当前组。播放队列显示实际本地播放顺序。「音频输出」可在 macOS 已连接的设备或系统默认输出之间切换，并显示设备的实际采样率、位深和声道。应用渲染可选自动或 44.1 至 192 kHz。手动选项在播放图中重采样，硬件格式由音频 MIDI 设置管理。切换时保留曲目、进度和暂停状态。
+「歌曲回放」的「所有范围」可从当前专辑或艺术家继续播放当前视图中排在后面的组。「选定范围」只播放当前组。播放队列显示实际本地播放顺序。「音频输出」可在 macOS 已连接的设备或系统默认输出之间切换，并显示设备的实际采样率、位深和声道。应用渲染可选自动或 44.1 至 384 kHz。手动选项在播放图中重采样，硬件格式由音频 MIDI 设置管理。切换时保留曲目、进度和暂停状态。
 
 实机对照见 `Reference/columns-*.png`、`Reference/playback-range-settings.png`、`Reference/output-manual-settings.png` 和 `Reference/output-switch-confirmation.png`。
 
@@ -149,7 +147,7 @@ Windows 2.7.4 对照图见 `Reference/queue-*.png` 和 `Reference/library-*.png`
 
 在歌曲菜单选择「编辑歌曲 → 导出 WAV」或「导出 FLAC」，再选择目标文件夹。遇到同名文件时自动追加编号。FLAC 使用 macOS 的无损编码器，并保存常用曲目信息。
 
-打开侧栏「CD」可读取 macOS 已挂载的音频 CD。选中曲目或整张导入，文件复制到所选文件夹后登记到曲库。CD 导入设置提供光驱选择、插盘操作、WAV／MP3／AAC／FLAC、80 分钟容量估算和自动弹出。AAC 和 MP3 可选 80、96、128、160、192、256 或 320 kbps。MP3 需要带 libmp3lame 编码器的 FFmpeg。插盘默认无操作，可设置自动播放，或选择目标文件夹后自动导入。校验模式在转换前复制并比对光盘源文件。本机未连接光驱，导入流程使用 AIFF 测试文件验证。
+打开侧栏「CD」可读取 macOS 已挂载的音频 CD。选中曲目或整张导入，文件复制到所选文件夹后登记到曲库。CD 导入设置提供光驱选择、插盘操作、WAV／MP3／AAC／FLAC、80 分钟容量估算和自动弹出。AAC 可选 320、256、192、160、128、96、80 kbps；MP3 可选 320、256、224、192、160、128、112、96 kbps。MP3 需要带 libmp3lame 编码器的 FFmpeg。插盘默认无操作，可设置自动播放，或选择目标文件夹后自动导入。校验模式在转换前复制并比对光盘源文件。本机未连接光驱，导入流程使用 AIFF 测试文件验证。
 
 「工具 → 批量转化ATRAC」使用已有的 FFmpeg 解码 OMA、AA3 或 AT3，再导出 FLAC。当前主机没有 FFmpeg。
 

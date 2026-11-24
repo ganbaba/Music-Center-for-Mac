@@ -1,0 +1,247 @@
+[
+  {
+    "file": "Captures/01-display-colors-open.jpg",
+    "bytes": 130456,
+    "sha256": "ceab8d2e43e1eafb91044a2b70afbda461dfaff225d50c94e5d27e95f7a55368"
+  },
+  {
+    "file": "Captures/01-display-compact.jpg",
+    "bytes": 125889,
+    "sha256": "498a6936b30955eb4d56af27640bbb7cb8121d22b45b69e18fe3850e11048cd4"
+  },
+  {
+    "file": "Captures/01-display-normal.jpg",
+    "bytes": 159644,
+    "sha256": "dc56c5a601f79da04f4115565124dd81c93230224632a1dba1fde4a3100de31e"
+  },
+  {
+    "file": "Captures/01-display-scroll-bottom.jpg",
+    "bytes": 149781,
+    "sha256": "0ef2150e5dc5cdcbb4e1e7deaf3709df60121216db48a5b0b83eef01c33e8e57"
+  },
+  {
+    "file": "Captures/02-columns-compact.jpg",
+    "bytes": 153718,
+    "sha256": "99a308526027d1e0eaa8a29643facb44d4aba5e4b7e8d66966c1c6c19e3e0256"
+  },
+  {
+    "file": "Captures/02-columns-normal.jpg",
+    "bytes": 163290,
+    "sha256": "54f1cff457d8fbb86f9148db9fccb6d25eea4bdd4aef55caf3bc174122273835"
+  },
+  {
+    "file": "Captures/03-import-bottom.jpg",
+    "bytes": 140753,
+    "sha256": "d6deabd1cb0cd350fe40727229c4b934102259f741d5937c67d90a8d5098b9c0"
+  },
+  {
+    "file": "Captures/03-import-compact.jpg",
+    "bytes": 143046,
+    "sha256": "5425ee18c6aca903a5dd4a4370ba21472c6d11bb95213cc65e117a1c295cdeb5"
+  },
+  {
+    "file": "Captures/03-import-normal.jpg",
+    "bytes": 156148,
+    "sha256": "1614bb150c32be02f4bd52b475f3b090970c4f0b235d3f7ec53b79ef7461ca57"
+  },
+  {
+    "file": "Captures/04-cd-aac-bitrates.jpg",
+    "bytes": 175250,
+    "sha256": "8292408242b4de0639c06430cad6e3a8bd3e51831c69dd73a41b51594c1fd682"
+  },
+  {
+    "file": "Captures/04-cd-compact-bottom.jpg",
+    "bytes": 159396,
+    "sha256": "a1ec16aa7a35588cee07607a2a79a226cf1090ec515ce7a8b50c1996d8dee830"
+  },
+  {
+    "file": "Captures/04-cd-compact.jpg",
+    "bytes": 139459,
+    "sha256": "efa6a24760aab382c53126bd43b5922494708643531c1ac023310906520f2bed"
+  },
+  {
+    "file": "Captures/04-cd-flac.jpg",
+    "bytes": 157809,
+    "sha256": "d2352fedc1b7d923b1c36f182e384f2816ebd3c56bc25d728e49a4a635ce2bf1"
+  },
+  {
+    "file": "Captures/04-cd-format-open.jpg",
+    "bytes": 149336,
+    "sha256": "891c8fdcf573994c3499b0791f7d33b9a1f48104046c911d2237f078341f81b2"
+  },
+  {
+    "file": "Captures/04-cd-import-mode.jpg",
+    "bytes": 167218,
+    "sha256": "ef320740e0df041f7b7c0849fc009aa038fbd3283f698a9db963fbb4f04c8f40"
+  },
+  {
+    "file": "Captures/04-cd-mp3-bitrates.jpg",
+    "bytes": 175645,
+    "sha256": "bff6a85e88d4bd3ced3b2c2edeb8004b27aeb94ea3c01322cd923e291ef842e2"
+  },
+  {
+    "file": "Captures/04-cd-normal.jpg",
+    "bytes": 180130,
+    "sha256": "670bf839c1be28e4bd45f350adec45ece1052cc051925dbe2f2324d5443ef415"
+  },
+  {
+    "file": "Captures/04-cd-wav.jpg",
+    "bytes": 157372,
+    "sha256": "1e6cfc19587169f2ac7e6f86de6b61f437870755ad93bdf094ad09b06582b477"
+  },
+  {
+    "file": "Captures/05-language-escape-keeps-value.jpg",
+    "bytes": 149748,
+    "sha256": "64e2acfb3eca314191f83b71c53c279c0831958479b03a6188103091b23dc841"
+  },
+  {
+    "file": "Captures/05-language-keyboard-home.jpg",
+    "bytes": 160907,
+    "sha256": "4167e337d55cc9948478e3ab6946d11e951cb1d7fce30ada0ab520409562a741"
+  },
+  {
+    "file": "Captures/05-language-keyboard-selected.jpg",
+    "bytes": 148809,
+    "sha256": "5c28826760c26bce1a00271b04e03d3c5fb0fd3acebb4dd51e56175b380e0553"
+  },
+  {
+    "file": "Captures/05-metadata-compact.jpg",
+    "bytes": 162107,
+    "sha256": "da8ecc9c43b1172877cb57fa8e7e2d4ef9416bd062cc4825cd344f1f827ffe96"
+  },
+  {
+    "file": "Captures/05-metadata-enabled-bottom.jpg",
+    "bytes": 149962,
+    "sha256": "3efcea8b87249b93dc5eca5947c10821f611a13bb2a92ca72bc58d4fea371555"
+  },
+  {
+    "file": "Captures/05-metadata-languages-open.jpg",
+    "bytes": 162399,
+    "sha256": "d661aa9840259fc460569be785dd5e145799dd8ece29821a23509484587f9116"
+  },
+  {
+    "file": "Captures/05-metadata-normal.jpg",
+    "bytes": 185738,
+    "sha256": "837b15f8a01a837b8cf931f2215c20f498dc5b2830c950b0a83f433879785dcd"
+  },
+  {
+    "file": "Captures/06-playback-compact.jpg",
+    "bytes": 115810,
+    "sha256": "e192a559e96c0473aeb8fa7f45d3427a2d903c86f2eedb21a7f226de00736faa"
+  },
+  {
+    "file": "Captures/06-playback-normal.jpg",
+    "bytes": 125383,
+    "sha256": "8b7232fdd864bf668d258a3ced1acb139843bab09ed0118107cd0ae4cc503513"
+  },
+  {
+    "file": "Captures/07-transfer-bitrates-open.jpg",
+    "bytes": 162136,
+    "sha256": "d87b2e7d0e99c602cce19d33457156443c6b6f2c2971483fa1ee9cee69ba13c6"
+  },
+  {
+    "file": "Captures/07-transfer-compact.jpg",
+    "bytes": 168186,
+    "sha256": "faee37230297138652eaf97b54853e89dc6bb4249d6914d98aa0121c2ccb04b2"
+  },
+  {
+    "file": "Captures/07-transfer-normal.jpg",
+    "bytes": 177752,
+    "sha256": "523d47f35560831a3666ebea323f1222ea0a5c7fab8a9216e87990d5b569a651"
+  },
+  {
+    "file": "Captures/08-output-bits-open.jpg",
+    "bytes": 166356,
+    "sha256": "d4d08322c3815b463ce9b611f65dbfaec3cdded9a4026af083059ff9f7304d8a"
+  },
+  {
+    "file": "Captures/08-output-compact.jpg",
+    "bytes": 158173,
+    "sha256": "93099b94ebd6f3b6057b6d1fc1225e60b6b8454c0cf4f33474ccae9b274fae80"
+  },
+  {
+    "file": "Captures/08-output-normal.jpg",
+    "bytes": 167747,
+    "sha256": "1fa0a02558378d3ff94df967bfc13865151515f33a484352911c1f7f90b0fef6"
+  },
+  {
+    "file": "Captures/08-output-rates-open.jpg",
+    "bytes": 166614,
+    "sha256": "65b978c7baa7e058e4813c17ea550429cdd56974f8f4b77518ff4c9c94f27087"
+  },
+  {
+    "file": "Captures/09-share-compact.jpg",
+    "bytes": 133871,
+    "sha256": "7bf8c64abad39bb9a06bcaa7e26be1227ff730af1beaec9518fe05dc2d513a6b"
+  },
+  {
+    "file": "Captures/09-share-enabled.jpg",
+    "bytes": 161063,
+    "sha256": "db2ce3cf5858a4f42f9f14a9d0f5e5134e129672ac51c2ac97940916caacd2be"
+  },
+  {
+    "file": "Captures/09-share-normal.jpg",
+    "bytes": 143447,
+    "sha256": "4275cc4b47d6007ef89e86a769191fb1832639fff9a6ac131f90a75a66b01d23"
+  },
+  {
+    "file": "Captures/10-update-auto-off.jpg",
+    "bytes": 177404,
+    "sha256": "0a198bfd774af351a7d1705d23aa1baa07da8709608b201c8c0ce72f80757c65"
+  },
+  {
+    "file": "Captures/10-update-compact.jpg",
+    "bytes": 182320,
+    "sha256": "054db9ceb441b4400053d4bd3db4f4e13e9392ccea8c9bbec651894a1eba326e"
+  },
+  {
+    "file": "Captures/10-update-normal.jpg",
+    "bytes": 188571,
+    "sha256": "3796124de79357bcdab7c9e655891ece464e59890a71ce5c19115758981d729f"
+  },
+  {
+    "file": "Captures/11-other-compact.jpg",
+    "bytes": 129664,
+    "sha256": "d0f6d458358e939fe223cbb11902f034284fda7e1c2810d6431217244182844b"
+  },
+  {
+    "file": "Captures/11-other-normal.jpg",
+    "bytes": 139237,
+    "sha256": "5e7423036074e5cdafb99d0d2e2f1823895d6c53245dcf28734bbe2c4af09d8c"
+  },
+  {
+    "file": "Captures/cancel-keeps-saved-preferences.jpg",
+    "bytes": 49667,
+    "sha256": "fdcf1559b9dc3ea88c6947c8a2bc55d082bae891109d7c7349d0fcf2dfccabc8"
+  },
+  {
+    "file": "Captures/integrated-empty-drive.jpg",
+    "bytes": 252386,
+    "sha256": "d3da91430b9616456d3de0a18828e98c5229ac101880dcbda653e63a57843b3d"
+  },
+  {
+    "file": "Captures/integrated-settings-cd.jpg",
+    "bytes": 252246,
+    "sha256": "c1a4eb0547ae9461b5a1db996ef28766f82f042b862642a8fe42ca77d70f1ef9"
+  },
+  {
+    "file": "Captures/integrated-settings-display.jpg",
+    "bytes": 230064,
+    "sha256": "dff0247852ec3554e5eaf35cf393dfd4dd6f8f628c03e3861625e2df02067e3a"
+  },
+  {
+    "file": "Captures/integrated-settings-format-open.jpg",
+    "bytes": 238501,
+    "sha256": "27430bed5f020aed9a6ba217ca11ccadd623a65ab0d7f9f987f8331715b41523"
+  },
+  {
+    "file": "Captures/save-applies-preferences.jpg",
+    "bytes": 49645,
+    "sha256": "fcf058456964fa0c33d46fbc6fe910e36acd5cca5f42421c0a0f6b63c7f748e5"
+  },
+  {
+    "file": "Captures/save-reopen-selected-size.jpg",
+    "bytes": 126264,
+    "sha256": "2fe77d42248ca6166380ee8ca1fbc50677f4d39f702134705ac3e412c1127726"
+  }
+]

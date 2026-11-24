@@ -137,26 +137,24 @@ struct SettingsPreview: View {
     @State private var draft: PreviewSettings
     @State private var shownSelection: String?
     @State private var hiddenSelection: String?
-    @State private var showsBitrates = false
-    @State private var showsAppearances = false
-    let outputDevices: [AudioOutputDevice]
-    let defaultOutput: AudioOutputDevice.ID?
+    @State private var dropdown: SettingsDropdownRequest?
+    let panelHeight: CGFloat
+    @State private var explanation: String?
     let cdDrives: [AudioCDDrive]
     let refreshCDDrives: () -> Void
     let save: (PreviewSettings) -> Void
     let cancel: () -> Void
 
-    private let gold = Color(red: 0.70, green: 0.57, blue: 0.29)
-    private let ink = Color(white: 0.10)
-    private let muted = Color(white: 0.42)
+    private let gold = SettingsStyle.gold
+    private let ink = SettingsStyle.ink
+    private let muted = SettingsStyle.heading
     private let selected = Color(white: 0.87)
-    init(page: SettingsPage, settings: PreviewSettings, outputDevices: [AudioOutputDevice], defaultOutput: AudioOutputDevice.ID?,
+    init(page: SettingsPage, settings: PreviewSettings, height: CGFloat = 690,
          cdDrives: [AudioCDDrive], refreshCDDrives: @escaping () -> Void,
          save: @escaping (PreviewSettings) -> Void, cancel: @escaping () -> Void) {
         _page = State(initialValue: page)
         _draft = State(initialValue: settings)
-        self.outputDevices = outputDevices
-        self.defaultOutput = defaultOutput
+        panelHeight = height
         self.cdDrives = cdDrives
         self.refreshCDDrives = refreshCDDrives
         self.save = save
@@ -188,15 +186,17 @@ struct SettingsPreview: View {
                     case .playback: playbackControls
                     case .output: outputControls
                     case .transfer: transferControls
-                    default: AdditionalSettings(page: page, settings: $draft, gold: gold,
-                                                cdDrives: cdDrives, refreshCDDrives: refreshCDDrives).id(page)
+                    default: AdditionalSettings(page: page, settings: $draft,
+                                                cdDrives: cdDrives, refreshCDDrives: refreshCDDrives,
+                                                explain: { explanation = $0 }).id(page)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
-                .padding(.trailing, 24)
-                .padding(.top, 7)
+                .padding(.trailing, page == .cd ? 0 : 16)
+                .padding(.top, 11)
+                .padding(.bottom, 12)
             }
-            Spacer(minLength: 12)
+            .frame(maxHeight: .infinity, alignment: .top)
             HStack(spacing: 9) {
                 Spacer()
                 Button { save(draft) } label: {
@@ -220,7 +220,30 @@ struct SettingsPreview: View {
         }
         .font(.system(size: 12))
         .foregroundStyle(ink)
-        .frame(width: 710, height: 690)
+        .frame(width: 710, height: panelHeight)
+        .environment(\.presentSettingsDropdown) { dropdown = $0 }
+        .environment(\.activeSettingsDropdown, dropdown?.id)
+        .overlayPreferenceValue(SettingsDropdownAnchors.self) { anchors in
+            GeometryReader { geometry in
+                if let dropdown, let anchor = anchors[dropdown.id] {
+                    let bounds = geometry[anchor]
+                    let below = max(0, geometry.size.height - 6 - bounds.maxY)
+                    let above = max(0, bounds.minY - 6)
+                    let showBelow = below >= min(CGFloat(dropdown.titles.count) * 22 + 2, 280) || below >= above
+                    let height = min(CGFloat(dropdown.titles.count) * 22 + 2, showBelow ? below : above)
+                    ZStack(alignment: .topLeading) {
+                        Color.black.opacity(0.001).onTapGesture { self.dropdown = nil }
+                        SettingsDropdownList(request: dropdown, height: height) { self.dropdown = nil }
+                            .frame(width: bounds.width)
+                            .offset(x: bounds.minX, y: showBelow ? bounds.maxY : bounds.minY - height)
+                    }
+                    .id(dropdown.id)
+                }
+            }
+        }
+        .alert("Music Center UI Preview", isPresented: Binding(get: { explanation != nil }, set: { if !$0 { explanation = nil } })) {
+            Button("确定") { explanation = nil }
+        } message: { Text(explanation ?? "") }
         .background(.white)
         .compositingGroup()
         .shadow(color: .black.opacity(0.55), radius: 7, y: 2)
@@ -233,12 +256,12 @@ struct SettingsPreview: View {
             ForEach(SettingsPage.allCases, id: \.self) { destination in
                 Button {
                     page = destination
-                    showsBitrates = false
-                    showsAppearances = false
+                    dropdown = nil
                 } label: {
                     sidebarLabel(destination.rawValue)
                 }
                 .buttonStyle(.plain)
+                .accessibilityAddTraits(page == destination ? .isSelected : [])
             }
         }
         .frame(width: 224)
@@ -254,7 +277,7 @@ struct SettingsPreview: View {
     }
 
     private var displayControls: some View {
-        ScrollView {
+        SettingsScroll {
             VStack(alignment: .leading, spacing: 33) {
                 displaySection("文本大小") {
                     ForEach(DisplaySettings.TextSize.allCases, id: \.self) { value in
@@ -273,7 +296,6 @@ struct SettingsPreview: View {
                 displaySection("应用程序显示颜色") {
                     appearanceControl
                 }
-                .zIndex(1)
                 displaySection("显示艺术家") {
                     settingRadio("按专辑演出者排序", selected: !draft.display.groupArtistsByTrack) {
                         draft.display.groupArtistsByTrack = false
@@ -284,33 +306,22 @@ struct SettingsPreview: View {
                     Text("专辑按歌曲艺术家分类显示。").padding(.leading, 39)
                 }
                 displaySection("视觉效果") {
-                    Button { draft.display.visualEffects.toggle() } label: {
-                        HStack(spacing: 16) {
-                            ZStack {
-                                Rectangle().strokeBorder(muted)
-                                if draft.display.visualEffects {
-                                    Rectangle().fill(gold)
-                                    Image(systemName: "checkmark").foregroundStyle(.white)
-                                }
-                            }
-                            .frame(width: 16, height: 16)
-                            Text("为切换屏幕显示等操作启用视觉效果")
-                        }
-                        .frame(height: 24)
+                    SettingsCheck("为切换屏幕显示等操作启用视觉效果", isOn: $draft.display.visualEffects)
                         .padding(.leading, 8)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(draft.display.visualEffects ? .isSelected : [])
                 }
-
+                displaySection("初始化隐藏信息") {
+                    Text("显示[下次不要显示此信息]复选框中勾选的所有信息。")
+                    HStack {
+                        Spacer()
+                        SettingsAction("初始化") { explanation = "当前没有已隐藏的提示。" }
+                    }
+                }
             }
             .frame(width: 284, alignment: .leading)
-            .padding(.bottom, 13)
+            .padding(.bottom, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .scrollIndicators(.visible)
-        .frame(width: 332, height: 577)
+        .frame(width: 332)
     }
 
     private func displaySection<Controls: View>(_ title: String, @ViewBuilder controls: () -> Controls) -> some View {
@@ -321,166 +332,40 @@ struct SettingsPreview: View {
     }
 
     private var appearanceControl: some View {
-        Button { showsAppearances.toggle() } label: {
-            HStack {
-                Text(draft.display.appearance.rawValue)
-                Spacer()
-                Image(systemName: "chevron.down").font(.system(size: 9)).foregroundStyle(muted)
-            }
-            .padding(.horizontal, 7)
-            .frame(height: 25)
-            .border(showsAppearances ? gold : muted)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("应用程序显示颜色")
-        .accessibilityValue(draft.display.appearance.rawValue)
-        .overlay(alignment: .top) {
-            if showsAppearances {
-                VStack(spacing: 0) {
-                    ForEach(DisplaySettings.Appearance.allCases, id: \.self) { value in
-                        let selected = value == draft.display.appearance
-                        Button {
-                            draft.display.appearance = value
-                            showsAppearances = false
-                        } label: {
-                            Text(value.rawValue)
-                                .padding(.horizontal, 7)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(height: 22)
-                                .foregroundStyle(selected ? .white : ink)
-                                .background(selected ? Color(red: 0.08, green: 0.37, blue: 0.80) : .white)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityAddTraits(selected ? .isSelected : [])
-                    }
-                }
-                .padding(1)
-                .background(.white)
-                .border(muted)
-                .offset(y: 25)
-            }
-        }
+        SettingsDropdown(title: "应用程序显示颜色", selection: $draft.display.appearance,
+            options: DisplaySettings.Appearance.allCases.map {
+                SettingsDropdownOption(value: $0, title: $0.rawValue)
+            })
     }
 
     private func settingRadio(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                Circle().strokeBorder(selected ? gold : muted)
-                    .overlay { if selected { Circle().fill(gold).padding(2.5) } }
-                    .frame(width: 16, height: 16)
-                Text(title)
-            }
-            .frame(height: 24)
-            .padding(.leading, 8)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        SettingsRadio(title, selected: selected, action: action).padding(.leading, 8)
     }
 
     private var transferControls: some View {
-        VStack(alignment: .leading, spacing: 11) {
-            Text("传输模式").foregroundStyle(muted)
-            HStack(spacing: 18) {
-                Text("转换比特率：")
-                bitrateControl
-            }
-            .zIndex(1)
-            Text("如果指定比特率与设备不兼容，则转换为近似值后传输。")
-                .padding(.leading, 39)
-            transferMode("正常传输：原始文件格式传输 (推荐)", converts: false)
-            Text("设备无法播放的文件将转换为AAC格式后传输。")
-                .padding(.leading, 39)
-                .padding(.top, -6)
-            transferMode("自动指定传输：文件始终转换为AAC格式后传输。", converts: true)
-            Text("传输后操作").foregroundStyle(muted).padding(.top, 25)
-            Button {
-                draft.removesConvertedFiles.toggle()
-            } label: {
+        SettingsScroll {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("传输模式").foregroundStyle(muted)
                 HStack(spacing: 16) {
-                    ZStack {
-                        Rectangle().strokeBorder(muted)
-                        if draft.removesConvertedFiles {
-                            Rectangle().fill(gold)
-                            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 16, height: 16)
-                    Text("传输后，删除传输中的已转换文件")
+                    Text("转换比特率：").frame(width: 88, alignment: .leading)
+                    SettingsDropdown(title: "转换比特率", selection: $draft.bitrate,
+                        options: PreviewSettings.aacBitrates.map { SettingsDropdownOption(value: $0, title: "\($0) kbps") })
+                        .frame(width: 200)
                 }
-                .contentShape(Rectangle())
+                Text("如果指定比特率与设备不兼容，则转换为近似值后传输。")
+                    .padding(.leading, 40).fixedSize(horizontal: false, vertical: true)
+                settingRadio("正常传输：原始文件格式传输 (推荐)", selected: !draft.convertsAll) { draft.convertsAll = false }
+                Text("设备无法播放的文件将转换为AAC格式后传输。")
+                    .padding(.leading, 40).fixedSize(horizontal: false, vertical: true)
+                settingRadio("自动指定传输：文件始终转换为AAC格式后传输。", selected: draft.convertsAll) { draft.convertsAll = true }
+                Text("传输后操作").foregroundStyle(muted).padding(.top, 36)
+                SettingsCheck("传输后，删除传输中的已转换文件", isOn: $draft.removesConvertedFiles)
+                    .padding(.leading, 8).padding(.top, 8)
+                Text("虽然反选会缩短下次传输已转换文件的时间，但占用更大的计算机硬盘容量。")
+                    .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
             }
-            .buttonStyle(.plain)
-            .padding(.leading, 5)
-            .accessibilityAddTraits(draft.removesConvertedFiles ? .isSelected : [])
-            Text("虽然反选会缩短下次传输已转换文件的时间，但占用更大的计算机硬盘容量。")
+            .padding(.trailing, 8).padding(.bottom, 8)
         }
-    }
-
-    private var bitrateControl: some View {
-        Button {
-            showsBitrates.toggle()
-        } label: {
-            HStack {
-                Text("\(draft.bitrate) kbps")
-                Spacer()
-                Image(systemName: "chevron.down").font(.system(size: 9))
-            }
-            .padding(.horizontal, 7)
-            .frame(width: 200, height: 24)
-            .border(showsBitrates ? gold : muted)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("转换比特率")
-        .accessibilityValue("\(draft.bitrate) kbps")
-        .overlay(alignment: .top) {
-            if showsBitrates {
-                VStack(spacing: 0) {
-                    ForEach([320, 256, 192, 160, 128, 96, 80], id: \.self) { rate in
-                        Button {
-                            draft.bitrate = rate
-                            showsBitrates = false
-                        } label: {
-                            Text("\(rate) kbps")
-                                .padding(.leading, 7)
-                                .frame(width: 198, height: 21, alignment: .leading)
-                                .foregroundStyle(rate == draft.bitrate ? .white : ink)
-                                .background(rate == draft.bitrate ? Color(red: 0.08, green: 0.37, blue: 0.80) : .white)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(1)
-                .background(.white)
-                .border(muted)
-                .offset(y: 24)
-            }
-        }
-    }
-
-    private func transferMode(_ label: String, converts: Bool) -> some View {
-        Button {
-            draft.convertsAll = converts
-        } label: {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle().strokeBorder(muted, lineWidth: 1)
-                    if draft.convertsAll == converts {
-                        Circle().fill(gold).padding(2.5)
-                    }
-                }
-                .frame(width: 16, height: 16)
-                Text(label)
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .padding(.leading, 5)
-        .accessibilityAddTraits(draft.convertsAll == converts ? .isSelected : [])
     }
 
     private var playbackControls: some View {
@@ -488,46 +373,53 @@ struct SettingsPreview: View {
             Text("歌曲回放范围").foregroundStyle(muted)
             settingRadio("所有范围", selected: draft.playsAcrossLists) { draft.playsAcrossLists = true }
             Text("在包含选定歌曲的列表结束后，继续播放下一个列表。")
-                .padding(.leading, 39)
+                .padding(.leading, 40).fixedSize(horizontal: false, vertical: true)
             settingRadio("选定范围", selected: !draft.playsAcrossLists) { draft.playsAcrossLists = false }
-            Text("只播放包含选定歌曲的列表。").padding(.leading, 39)
+            Text("只播放包含选定歌曲的列表。").padding(.leading, 40)
         }
     }
 
     private var outputControls: some View {
-        let selected = outputDevices.first { $0.id == draft.outputDeviceUID }
-        let device = selected ?? outputDevices.first { $0.id == defaultOutput }
-        let formats = device?.formats.map(\.label).joined(separator: "\n") ?? ""
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 15) {
-                Label("播放设备", systemImage: "speaker.wave.2").font(.headline)
-                Picker("输出设备", selection: $draft.outputDeviceUID) {
-                    Text("跟随系统").tag(String?.none)
-                    ForEach(outputDevices) { device in Text(device.name).tag(Optional(device.id)) }
-                    if let uid = draft.outputDeviceUID, selected == nil {
-                        Text("已断开的设备").tag(Optional(uid))
+        SettingsScroll {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("输出格式(ASIO/WASAPI专用)").foregroundStyle(muted)
+                settingRadio("推荐设置：自动设置最佳输出格式", selected: draft.outputSampleRate == .automatic) {
+                    draft.outputSampleRate = .automatic
+                }.padding(.top, 8)
+                settingRadio("手动设置：选择输出格式", selected: draft.outputSampleRate != .automatic) {
+                    if draft.outputSampleRate == .automatic { draft.outputSampleRate = .standard }
+                }
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        Text("量化比特率").frame(width: 92, alignment: .leading)
+                        SettingsDropdown(title: "量化比特率", selection: Binding(
+                            get: { draft.choices["输出量化比特率"] ?? "16 bit" },
+                            set: { draft.choices["输出量化比特率"] = $0 }),
+                            options: ["16 bit", "24 bit", "32 bit"].map { SettingsDropdownOption(value: $0, title: $0) })
+                            .frame(width: 208)
+                    }
+                    HStack(spacing: 12) {
+                        Text("采样频率").frame(width: 92, alignment: .leading)
+                        SettingsDropdown(title: "采样频率", selection: Binding(
+                            get: { draft.outputSampleRate == .automatic ? .standard : draft.outputSampleRate },
+                            set: { draft.outputSampleRate = $0 }),
+                            options: AudioRenderRate.allCases.filter { $0 != .automatic }
+                                .map { SettingsDropdownOption(value: $0, title: $0.label) })
+                            .frame(width: 208)
                     }
                 }
-                if draft.outputDeviceUID != nil, selected == nil {
-                    Text("此设备已断开，播放使用系统输出。").foregroundStyle(.secondary)
-                }
-                LabeledContent("设备格式", value: formats.isEmpty ? "不可用" : formats)
-
-                Divider()
-                Label("应用渲染", systemImage: "waveform").font(.headline)
-                Picker("采样率", selection: $draft.outputSampleRate) {
-                    ForEach(AudioRenderRate.allCases) { rate in Text(rate.label).tag(rate) }
-                }
-                Text("自动使用 macOS 的输出格式。手动采样率作用于本应用的播放处理。")
-                    .font(.caption).foregroundStyle(.secondary)
-                Button("打开音频 MIDI 设置…") {
-                    NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Audio MIDI Setup.app"))
-                }
-                Text("设备的采样率和位深由 macOS 管理。")
-                    .font(.caption).foregroundStyle(.secondary)
+                .padding(.leading, 40)
+                .disabled(draft.outputSampleRate == .automatic)
+                SettingsCheck("出现跳过音频时请勾选。", isOn: Binding(
+                    get: { draft.flags["出现跳过音频时请勾选。"] ?? false },
+                    set: { draft.flags["出现跳过音频时请勾选。"] = $0 }))
+                    .padding(.leading, 8)
+                Text("调整设备设置有时可以消除跳过现象。确保检查设备设置。")
+                    .padding(.leading, 40).fixedSize(horizontal: false, vertical: true)
+                Text("备注：处于ASIO或WASAPI专属模式下时，下列限制适用。\n- 无法使用Music Center for PC。\n- 调节音量、均衡器功能禁用。")
+                    .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
             }
-            .frame(maxWidth: 390, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.trailing, 8).padding(.bottom, 8)
         }
     }
 
@@ -565,14 +457,11 @@ struct SettingsPreview: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("隐藏")
                     columnList(hidden, selection: $hiddenSelection, otherSelection: $shownSelection, height: 288)
-                    Button {
+                    SettingsAction("恢复默认", width: 86) {
                         draft.columns = PreviewSettings.defaultColumns
                         shownSelection = nil
                         hiddenSelection = nil
-                    } label: {
-                        Text("恢复默认").padding(.horizontal, 8).frame(height: 27).border(ink)
                     }
-                    .buttonStyle(.plain)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.top, 8)
                 }
@@ -582,7 +471,7 @@ struct SettingsPreview: View {
 
     private func columnList(_ names: [String], selection: Binding<String?>, otherSelection: Binding<String?>,
                             height: CGFloat = 262) -> some View {
-        ScrollView {
+        SettingsScroll {
             VStack(spacing: 0) {
                 ForEach(names, id: \.self) { name in
                     Button {
@@ -592,7 +481,7 @@ struct SettingsPreview: View {
                         Text(name)
                             .padding(.horizontal, 8)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(height: 23)
+                            .frame(height: 22)
                             .background(selection.wrappedValue == name ? selected : .white)
                             .contentShape(Rectangle())
                     }
@@ -630,5 +519,167 @@ struct SettingsPreview: View {
     private func moveColumn(_ delta: Int) {
         guard canMoveColumn(delta), let shownSelection, let index = draft.columns.firstIndex(of: shownSelection) else { return }
         draft.columns.swapAt(index, index + delta)
+    }
+}
+
+struct SettingsDropdownOption<Value: Hashable> {
+    let value: Value
+    let title: String
+    var enabled = true
+}
+
+private struct SettingsDropdownRequest {
+    let id: UUID
+    let title: String
+    let titles: [String]
+    let enabled: [Bool]
+    let selectedIndex: Int?
+    let select: (Int) -> Void
+}
+
+private struct SettingsDropdownAnchors: PreferenceKey {
+    static let defaultValue: [UUID: Anchor<CGRect>] = [:]
+
+    static func reduce(value: inout [UUID: Anchor<CGRect>], nextValue: () -> [UUID: Anchor<CGRect>]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, next in next })
+    }
+}
+
+private struct ActiveSettingsDropdown: EnvironmentKey {
+    static let defaultValue: UUID? = nil
+}
+
+private struct PresentSettingsDropdown: EnvironmentKey {
+    static let defaultValue: @MainActor @Sendable (SettingsDropdownRequest) -> Void = { _ in }
+}
+
+private extension EnvironmentValues {
+    var activeSettingsDropdown: UUID? {
+        get { self[ActiveSettingsDropdown.self] }
+        set { self[ActiveSettingsDropdown.self] = newValue }
+    }
+
+    var presentSettingsDropdown: @MainActor @Sendable (SettingsDropdownRequest) -> Void {
+        get { self[PresentSettingsDropdown.self] }
+        set { self[PresentSettingsDropdown.self] = newValue }
+    }
+}
+
+struct SettingsDropdown<Value: Hashable>: View {
+    let title: String
+    @Binding var selection: Value
+    let options: [SettingsDropdownOption<Value>]
+    @State private var id = UUID()
+    @Environment(\.presentSettingsDropdown) private var present
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.activeSettingsDropdown) private var active
+
+    var body: some View {
+        Button {
+            guard !options.isEmpty else { return }
+            present(SettingsDropdownRequest(id: id, title: title,
+                titles: options.map(\.title), enabled: options.map(\.enabled),
+                selectedIndex: options.firstIndex { $0.value == selection },
+                select: { selection = options[$0].value }))
+        } label: {
+            HStack(spacing: 8) {
+                Text(options.first { $0.value == selection }?.title ?? "")
+                    .lineLimit(1).truncationMode(.tail)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.down").font(.system(size: 9))
+            }
+            .padding(.horizontal, 7)
+            .frame(maxWidth: .infinity).frame(height: 26)
+            .foregroundStyle(isEnabled ? Color(white: 0.10) : Color(white: 0.64))
+            .background(isEnabled ? .white : .white)
+            .overlay {
+                Rectangle().strokeBorder(active == id ? Color(red: 0.70, green: 0.57, blue: 0.29) :
+                    Color(white: isEnabled ? 0.42 : 0.78))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(options.first { $0.value == selection }?.title ?? "")
+        .anchorPreference(key: SettingsDropdownAnchors.self, value: .bounds) { [id: $0] }
+    }
+}
+
+private struct SettingsDropdownList: View {
+    let request: SettingsDropdownRequest
+    let height: CGFloat
+    let close: () -> Void
+    @State private var highlighted: Int?
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        ScrollViewReader { scroll in
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(request.titles.indices, id: \.self) { index in
+                        Button { choose(index) } label: {
+                            Text(request.titles[index])
+                                .lineLimit(1)
+                                .padding(.horizontal, 7)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(height: 22)
+                                .foregroundStyle(!request.enabled[index] ? Color(white: 0.65) :
+                                    (highlighted == index ? .white : Color(white: 0.10)))
+                                .background(highlighted == index ? Color(red: 0.08, green: 0.37, blue: 0.80) : .white)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!request.enabled[index])
+                        .accessibilityAddTraits(request.selectedIndex == index ? .isSelected : [])
+                        .onHover { inside in if inside && request.enabled[index] { highlighted = index } }
+                        .id(index)
+                    }
+                }
+            }
+            .onChange(of: highlighted) { _, index in
+                if let index { scroll.scrollTo(index) }
+            }
+            .onAppear {
+                highlighted = request.selectedIndex
+                if let index = request.selectedIndex { scroll.scrollTo(index) }
+            }
+        }
+        .scrollIndicators(.never)
+        .padding(1).frame(height: height)
+        .background(.white)
+        .overlay { Rectangle().strokeBorder(Color(white: 0.42)) }
+        .focusable().focused($focused).focusEffectDisabled()
+        .task {
+            await Task.yield()
+            focused = true
+        }
+        .onKeyPress(.upArrow) { move(-1); return .handled }
+        .onKeyPress(.downArrow) { move(1); return .handled }
+        .onKeyPress(.home) { highlighted = request.titles.indices.first { request.enabled[$0] }; return .handled }
+        .onKeyPress(.end) { highlighted = request.titles.indices.last { request.enabled[$0] }; return .handled }
+        .onKeyPress(.tab) { close(); return .ignored }
+        .onKeyPress(.return) {
+            if let highlighted { choose(highlighted) }
+            return .handled
+        }
+        .onKeyPress(.escape) { close(); return .handled }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(request.title + "选项")
+    }
+
+    private func move(_ delta: Int) {
+        let available = request.titles.indices.filter { request.enabled[$0] }
+        guard !available.isEmpty else { return }
+        guard let highlighted, let current = available.firstIndex(of: highlighted) else {
+            highlighted = delta > 0 ? available.first : available.last
+            return
+        }
+        self.highlighted = available[min(available.count - 1, max(0, current + delta))]
+    }
+
+    private func choose(_ index: Int) {
+        guard request.enabled[index] else { return }
+        request.select(index)
+        close()
     }
 }

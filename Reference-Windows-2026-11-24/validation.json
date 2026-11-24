@@ -1,0 +1,29 @@
+{
+  "screenshots": 209,
+  "bytes": 65641596,
+  "categories": {
+    "01-library": 30,
+    "03-toolbar": 31,
+    "02-main-menu": 13,
+    "06-dialogs": 49,
+    "04-settings": 40,
+    "07-equalizer-presets": 20,
+    "05-context-menus": 15,
+    "09-environment": 1,
+    "08-display-variants": 10
+  },
+  "planStatus": {
+    "captured": 143,
+    "captured-equivalent": 4,
+    "needs-hardware": 4,
+    "not-triggered": 2,
+    "not-observed": 2,
+    "awaiting-decision": 1
+  },
+  "allSha256Verified": true,
+  "allJpegsDecoded": true,
+  "duplicatePaths": 5,
+  "resolutions": {
+    "2732x1536": 209
+  }
+}

@@ -9,6 +9,8 @@ enum AudioRenderRate: Int, CaseIterable, Identifiable, Codable {
     case doubleStudio = 96000
     case highStandard = 176400
     case highStudio = 192000
+    case ultraStandard = 352800
+    case ultraStudio = 384000
 
     var id: Int { rawValue }
     var sampleRate: Double? { self == .automatic ? nil : Double(rawValue) }

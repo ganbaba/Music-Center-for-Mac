@@ -102,60 +102,221 @@ struct EqualizerSettings: Codable, Equatable {
 
 struct EqualizerPanel: View {
     @Binding var settings: EqualizerSettings
-    @State private var presetName = ""
     let close: () -> Void
 
+    @State private var showsPresets = false
+    @State private var highlightedPreset: String?
+    @FocusState private var presetListFocused: Bool
+    private let gold = Color(red: 0.69, green: 0.57, blue: 0.30)
+    private var presets: [EqualizerSettings.Preset] { settings.custom + EqualizerSettings.builtIns }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Label("播放均衡器", systemImage: "slider.horizontal.3").font(.headline)
-                Spacer()
-                Toggle("启用", isOn: $settings.enabled).toggleStyle(.switch)
+        ZStack(alignment: .topLeading) {
+            HStack(spacing: 10) {
+                Text("均衡器")
+                EffectSwitch(isOn: $settings.enabled, gold: gold, label: "启用均衡器")
             }
-            HStack {
-                Menu("选择预设") {
-                    ForEach(settings.custom + EqualizerSettings.builtIns) { preset in
-                        Button(preset.name) { settings.select(preset) }
+            .frame(width: 660, height: 22)
+            .offset(y: 26)
+
+            HStack(spacing: 10) {
+                HStack(spacing: 0) {
+                    TextField("", text: $settings.name)
+                        .textFieldStyle(.plain)
+                        .accessibilityLabel("均衡器预设名称")
+                        .padding(.horizontal, 6)
+                        .onTapGesture { showsPresets = false }
+                    Button {
+                        highlightedPreset = settings.name
+                        showsPresets.toggle()
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 9))
+                            .frame(width: 22, height: 24)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("选择均衡器预设")
+                    .accessibilityValue(settings.name)
+                    .overlay(alignment: .leading) {
+                        Rectangle().fill(Color(white: 0.65)).frame(width: 1)
                     }
                 }
-                if !settings.name.isEmpty { Text(settings.name).foregroundStyle(.secondary) }
-                Spacer()
-                Button("重置曲线") {
-                    settings.gains = Array(repeating: 0, count: EqualizerSettings.frequencies.count)
-                    settings.name = ""
-                }
-            }
-            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
-                ForEach(EqualizerSettings.frequencies.indices, id: \.self) { index in
-                    GridRow {
-                        Text(EqualizerSettings.frequencies[index] + " Hz").monospacedDigit()
-                        Slider(value: Binding(get: { Double(settings.gains[index]) },
-                                              set: { settings.setGain(Int($0), at: index) }),
-                               in: -12...12, step: 1)
-                            .accessibilityLabel(EqualizerSettings.frequencies[index] + " Hz")
-                        Text("\(settings.gains[index]) dB").monospacedDigit().frame(width: 52, alignment: .trailing)
-                    }
-                }
-            }
-            HStack {
-                TextField("新预设名称", text: $presetName)
-                Button("保存预设") {
-                    settings.name = presetName
-                    settings.save()
-                    presetName = ""
-                }
-                .disabled(presetName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                          || EqualizerSettings.builtIns.contains { $0.name == presetName.trimmingCharacters(in: .whitespacesAndNewlines) })
-                Button("删除预设", role: .destructive) {
+                .frame(width: 264, height: 24)
+                .background(.white)
+                .overlay(Rectangle().strokeBorder(showsPresets ? gold : Color(white: 0.65)))
+                Button {
                     settings.custom.removeAll { $0.name == settings.name }
                     settings.name = ""
-                }.disabled(!settings.custom.contains { $0.name == settings.name })
-                Spacer()
-                Button("完成", action: close).keyboardShortcut(.defaultAction)
+                } label: {
+                    Image(systemName: "trash").frame(width: 18, height: 24)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("删除均衡器预设")
+                .disabled(!settings.custom.contains { $0.name == settings.name })
+                .opacity(settings.custom.contains { $0.name == settings.name } ? 1 : 0)
+                Button { settings.save() } label: {
+                    Text("保存")
+                        .foregroundStyle(.white)
+                        .frame(width: 94, height: 24)
+                        .background(gold.opacity(settings.canSave ? 1 : 0.25))
+                }
+                .buttonStyle(.plain)
+                .disabled(!settings.canSave)
+                .accessibilityLabel("保存均衡器预设")
+            }
+            .offset(x: 135, y: 64)
+
+            HStack(alignment: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    Text("+12dB")
+                    Spacer(minLength: 0)
+                    Text("0dB")
+                    Spacer(minLength: 0)
+                    Text("-12dB")
+                }
+                .frame(width: 62, height: 204, alignment: .trailing)
+                .padding(.trailing, 20)
+                ForEach(EqualizerSettings.frequencies.indices, id: \.self) { index in
+                    VStack(spacing: 8) {
+                        EqualizerBand(gain: Binding(
+                            get: { settings.gains[index] },
+                            set: { settings.setGain($0, at: index) }),
+                            frequency: EqualizerSettings.frequencies[index], gold: gold)
+                        Text(EqualizerSettings.frequencies[index])
+                    }
+                    .frame(width: 49)
+                }
+            }
+            .offset(x: 28, y: 140)
+
+            Button(action: close) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 14))
+                    .frame(width: 38, height: 38)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("关闭均衡器")
+            .offset(x: 622)
+
+            if showsPresets {
+                Color.clear.contentShape(Rectangle())
+                    .onTapGesture { showsPresets = false }
+                presetList.offset(x: 135, y: 88)
             }
         }
-        .padding(24)
-        .frame(width: 570)
+        .frame(width: 660, height: 408, alignment: .topLeading)
+        .font(.system(size: 12))
+        .foregroundStyle(Color(white: 0.08))
+        .background(.white)
+        .environment(\.colorScheme, .light)
+        .compositingGroup()
+        .shadow(color: .black.opacity(0.4), radius: 7, y: 2)
+        .onExitCommand {
+            if showsPresets { showsPresets = false } else { close() }
+        }
+    }
+
+    private var presetList: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(presets) { preset in
+                        Button {
+                            settings.select(preset)
+                            showsPresets = false
+                        } label: {
+                            Text(preset.name)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 6)
+                                .frame(height: 22)
+                                .foregroundStyle(highlightedPreset == preset.name ? .white : Color(white: 0.08))
+                                .background(highlightedPreset == preset.name ? Color(red: 0.08, green: 0.36, blue: 0.80) : .white)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .id(preset.name)
+                        .onHover { if $0 { highlightedPreset = preset.name } }
+                    }
+                }
+            }
+            .frame(width: 264, height: min(264, CGFloat(presets.count) * 22))
+            .background(.white)
+            .overlay(Rectangle().strokeBorder(Color(white: 0.5)))
+            .focusable()
+            .focused($presetListFocused)
+            .focusEffectDisabled()
+            .accessibilityLabel("均衡器预设列表")
+            .task {
+                await Task.yield()
+                presetListFocused = true
+                if let highlightedPreset { proxy.scrollTo(highlightedPreset, anchor: .center) }
+            }
+            .onChange(of: highlightedPreset) {
+                if let highlightedPreset { proxy.scrollTo(highlightedPreset, anchor: .center) }
+            }
+            .onKeyPress(.downArrow) { movePreset(1); return .handled }
+            .onKeyPress(.upArrow) { movePreset(-1); return .handled }
+            .onKeyPress(.return) {
+                if let preset = presets.first(where: { $0.name == highlightedPreset }) {
+                    settings.select(preset)
+                    showsPresets = false
+                }
+                return .handled
+            }
+        }
+    }
+
+    private func movePreset(_ offset: Int) {
+        guard !presets.isEmpty else { return }
+        let current = presets.firstIndex { $0.name == highlightedPreset }
+        let index = min(presets.count - 1, max(0, (current ?? (offset > 0 ? -1 : presets.count)) + offset))
+        highlightedPreset = presets[index].name
+    }
+}
+
+private struct EqualizerBand: View {
+    @Binding var gain: Int
+    let frequency: String
+    let gold: Color
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        Canvas { context, size in
+            let center = size.width / 2
+            var ticks = Path()
+            ticks.move(to: CGPoint(x: center, y: 6))
+            ticks.addLine(to: CGPoint(x: center, y: size.height - 6))
+            for step in 0...24 {
+                let y = 6 + CGFloat(step) * (size.height - 12) / 24
+                let half: CGFloat = step % 12 == 0 ? 7 : step % 6 == 0 ? 5 : 3
+                ticks.move(to: CGPoint(x: center - half, y: y))
+                ticks.addLine(to: CGPoint(x: center + half, y: y))
+            }
+            context.stroke(ticks, with: .color(Color(white: 0.65)), lineWidth: 1)
+            let y = 6 + CGFloat(12 - gain) * (size.height - 12) / 24
+            context.fill(Path(CGRect(x: center - 9, y: y - 1.5, width: 18, height: 3)), with: .color(gold))
+        }
+        .frame(width: 29, height: 204)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 0).onChanged { event in
+            focused = true
+            gain = min(12, max(-12, Int((12 - (event.location.y - 6) / 8).rounded())))
+        })
+        .focusable()
+        .focused($focused)
+        .overlay {
+            if focused { RoundedRectangle(cornerRadius: 2).stroke(gold.opacity(0.5)).padding(.horizontal, -2) }
+        }
+        .onKeyPress(.upArrow) { gain = min(12, gain + 1); return .handled }
+        .onKeyPress(.downArrow) { gain = max(-12, gain - 1); return .handled }
+        .accessibilityRepresentation {
+            Slider(value: Binding(get: { Double(gain) }, set: { gain = Int($0) }), in: -12...12, step: 1)
+                .accessibilityLabel(frequency + " Hz")
+                .accessibilityValue("\(gain) dB")
+        }
+        .help(frequency + " Hz · \(gain) dB")
     }
 }
 

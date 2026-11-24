@@ -106,12 +106,14 @@ extension PreviewSettings {
         set { choices["CD格式"] = newValue.rawValue }
     }
 
-    static let cdBitrates = [320, 256, 192, 160, 128, 96, 80]
+    static let aacBitrates = [320, 256, 192, 160, 128, 96, 80]
+    static let mp3Bitrates = [320, 256, 224, 192, 160, 128, 112, 96]
+    var availableCDBitrates: [Int] { cdFormat == .mp3 ? Self.mp3Bitrates : Self.aacBitrates }
 
     var cdBitrate: Int {
         get {
             let value = Int((choices["CD码率"] ?? "").split(separator: " ").first ?? "")
-            return Self.cdBitrates.first { $0 == value } ?? 128
+            return availableCDBitrates.first { $0 == value } ?? 128
         }
         set { choices["CD码率"] = "\(newValue) kbps" }
     }
@@ -121,10 +123,7 @@ extension PreviewSettings {
         set { choices["CD模式"] = newValue.rawValue }
     }
 
-    var estimatedCDBytes: Int64 {
-        let bytesPerSecond = cdFormat.usesBitrate ? cdBitrate * 1000 / 8 : 44_100 * 2 * 2
-        return Int64(bytesPerSecond) * 80 * 60
-    }
+
 }
 
 struct AudioDiscPanel: View {

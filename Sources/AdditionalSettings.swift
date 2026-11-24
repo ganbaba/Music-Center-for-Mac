@@ -3,309 +3,312 @@ import SwiftUI
 struct AdditionalSettings: View {
     let page: SettingsPage
     @Binding var settings: PreviewSettings
-    let gold: Color
     let cdDrives: [AudioCDDrive]
     let refreshCDDrives: () -> Void
+    let explain: (String) -> Void
+    @State private var selectedFolder: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+        SettingsScroll {
+            Group {
                 switch page {
-                case .importFiles:
-                    heading("自动导入文件夹设置")
-                    Text("将文件夹设置为执行自动导入。")
-                    check("[音乐]文件夹")
-                    box("", height: 116)
-                    HStack { unavailable("添加文件夹…"); unavailable("删除") }
-                    heading("文件目的地")
-                    Text("原型曲库记录引用导入文件的位置。")
-                    box("MusicCenterUIRecreation", height: 70)
-                    HStack { unavailable("浏览…"); unavailable("恢复默认") }
-                case .cd:
-                    cdSettings
-                case .metadata:
-                    heading("获取歌曲信息")
-                    Text("备注：获取歌曲信息需要连接互联网")
-                    check("自动检索歌曲信息/执行12 Tone Analysis")
-                    Text("如果以下信息不可用，则将进行自动检索。")
-                    VStack(alignment: .leading) {
-                        check("歌曲信息，例如歌曲名称、类型以及发行年份", initial: true)
-                        check("封面图样", initial: true)
-                        check("12 TONE ANALYSIS", initial: true)
-                    }.padding(.leading, 24).disabled(!flag("自动检索歌曲信息/执行12 Tone Analysis"))
-                    heading("歌曲信息的获取时间")
-                    check("CD插入光驱时，自动获取CD信息和封面图样", initial: true)
-                    heading("Gracenote音乐识别服务")
-                    options("已设置语言", ["繁体中文", "简体中文", "日本語", "English"], selection("识别语言", "繁体中文"))
-                    heading("清空识别结果数据")
-                    unavailable("删除")
-                case .share:
-                    heading("分享我的数据库")
-                    let sharing = "与本地网络设备分享注册到我的数据库中的歌曲"
-                    check(sharing)
-                    VStack(alignment: .leading, spacing: 12) {
-                        TextField("数据库名称：", text: selection("数据库名称", "Music Center"))
-                        check("自动允许新设备访问我的数据库", initial: true)
-                        check("使用当前应用语言显示内容分类", initial: true)
-                        heading("高解析度流媒体")
-                        check("降低高解析度音源的音质到CD水平")
-                    }.disabled(!flag(sharing))
-                case .update:
-                    heading("自动软件更新")
-                    Text("启动时连接服务器，检查 Music Center for PC 和连接设备的软件更新。")
-                    check("启动Music Center for PC时，自动检查更新信息。", initial: true)
-                    heading("更新检查频率")
-                    radio(["每周", "每日", "每次启动时"], selection("更新检查频率", "每周"))
-                    heading("手动软件更新")
-                    unavailable("检查软件更新…")
-                case .other:
-                    heading("音效")
-                    check("歌曲从CD完全导入并传输到设备后，将播放通知声音。", initial: true)
-                    heading("清空播放历史")
-                    Text("清空全部歌曲播放历史信息。")
-                    unavailable("清空")
-                    heading("删除临时文件")
-                    Text("删除传输中创建的文件和临时文件，增加硬盘空间。")
-                    unavailable("删除")
-                case .display, .columns, .playback, .transfer, .output:
-                    EmptyView()
-                }
-                if page != .cd {
-                    Text("此页设置为界面预览").font(.system(size: 10)).foregroundStyle(.secondary).padding(.top, 8)
+                case .importFiles: importSettings
+                case .cd: cdSettings
+                case .metadata: metadataSettings
+                case .share: sharingSettings
+                case .update: updateSettings
+                case .other: otherSettings
+                default: EmptyView()
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.trailing, 8)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.trailing, page == .cd ? 26 : 24)
+            .padding(.bottom, 8)
         }
-        .frame(maxHeight: 580)
+    }
+
+    private var importSettings: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            heading("自动导入文件夹设置")
+            Text("将文件夹设置为执行自动导入。")
+            check("[音乐]文件夹").padding(.leading, 8).padding(.top, 8)
+            SettingsScroll {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(settings.autoImportFolders, id: \.self) { folder in
+                        Button { selectedFolder = folder } label: {
+                            Text(folder).lineLimit(1).truncationMode(.middle)
+                                .frame(maxWidth: .infinity, minHeight: 24, alignment: .leading)
+                                .padding(.horizontal, 6)
+                                .background(selectedFolder == folder ? Color(white: 0.87) : .white)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(1).frame(height: 120).border(SettingsStyle.ink)
+            HStack(spacing: 12) {
+                SettingsAction("添加文件夹…", width: 128, action: chooseImportFolder)
+                SettingsAction("删除", width: 128) {
+                    settings.autoImportFolders.removeAll { $0 == selectedFolder }
+                    selectedFolder = nil
+                }.disabled(selectedFolder == nil)
+            }
+            heading("文件目的地").padding(.top, 24)
+            Text("在Music Center for PC中管理的内容将保存在以下目标文件夹。")
+            Text(settings.importDestination.path)
+                .textSelection(.enabled)
+                .padding(8).frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
+                .border(SettingsStyle.ink)
+            HStack(spacing: 12) {
+                SettingsAction("浏览…", width: 128, action: chooseDestination)
+                SettingsAction("恢复默认", width: 128) {
+                    settings.cdImportDirectory = nil
+                }
+            }
+        }
+        .frame(maxWidth: 342, alignment: .leading)
     }
 
     private var cdSettings: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 0) {
             heading("导入CD数据的光驱")
-            CDDrivePicker(selection: $settings.cdDriveID, drives: cdDrives, refresh: refreshCDDrives)
-                .frame(width: 200, height: 26)
-
-            heading("CD插入光驱后的操作")
-                .padding(.top, 12)
-            radio(CDInsertionBehavior.allCases.map(\.label), Binding(
-                get: { settings.cdInsertionBehavior.label },
-                set: { label in
-                    if let behavior = CDInsertionBehavior.allCases.first(where: { $0.label == label }) {
+            SettingsDropdown(title: "光驱", selection: $settings.cdDriveID,
+                options: cdDriveOptions)
+                .frame(width: 200).padding(.top, 8)
+                .onAppear(perform: refreshCDDrives)
+            heading("CD插入光驱后的操作").padding(.top, 32)
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(CDInsertionBehavior.allCases) { behavior in
+                    SettingsRadio(behavior.label, selected: settings.cdInsertionBehavior == behavior) {
                         settings.cdInsertionBehavior = behavior
                     }
                 }
-            ))
-            if settings.cdInsertionBehavior == .importDisc {
-                Button("选择自动导入位置…", action: chooseCDImportDirectory)
-                if let directory = settings.cdImportDirectory {
-                    Text(directory.path).font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                }
-            }
-
-            heading("CD导入开始和结束时的操作")
-                .padding(.top, 12)
-            check("CD导入结束时自动弹出")
-                .padding(.leading, 6)
-
-            heading("CD导入设置")
-                .padding(.top, 12)
-            Text("从CD导入歌曲时设置文件格式。")
-            cdFormatControls
+            }.padding(.leading, 8).padding(.top, 12)
+            heading("CD导入开始和结束时的操作").padding(.top, 36)
+            check("CD导入结束时自动弹出").padding(.leading, 8).padding(.top, 16)
+            heading("CD导入设置").padding(.top, 36)
+            Text("从CD导入歌曲时设置文件格式。").padding(.top, 8)
+            cdFormatControls.padding(.top, 8)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var cdDriveOptions: [SettingsDropdownOption<String?>] {
+        guard !cdDrives.isEmpty || settings.cdDriveID != nil else { return [] }
+        var options = [SettingsDropdownOption<String?>(value: nil, title: "自动选择")]
+        options += cdDrives.map { SettingsDropdownOption(value: Optional($0.id), title: $0.name) }
+        if let id = settings.cdDriveID, !cdDrives.contains(where: { $0.id == id }) {
+            options.append(SettingsDropdownOption(value: id, title: "光驱暂不可用", enabled: false))
+        }
+        return options
     }
 
     private var cdFormatControls: some View {
-        let canEncodeMP3 = AudioCommand.ffmpeg != nil
-        return Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
-            GridRow {
-                Text("格式")
-                Menu {
-                    ForEach(AudioExportFormat.allCases) { format in
-                        Button { settings.cdFormat = format } label: {
-                            if settings.cdFormat == format {
-                                Label(format.rawValue, systemImage: "checkmark")
-                            } else {
-                                Text(format.rawValue)
-                            }
-                        }
-                        .disabled(format == .mp3 && !canEncodeMP3)
-                    }
-                } label: {
-                    Text(settings.cdFormat.rawValue)
-                }
-                .accessibilityLabel("格式")
-                .accessibilityValue(settings.cdFormat.rawValue)
+        VStack(alignment: .leading, spacing: 8) {
+            cdRow("格式") {
+                SettingsDropdown(title: "格式", selection: $settings.cdFormat,
+                    options: AudioExportFormat.allCases.map { SettingsDropdownOption(value: $0, title: $0.rawValue) })
             }
-            if settings.cdFormat == .mp3, !canEncodeMP3 {
-                cdFormatHint(AudioCommand.mp3Requirement)
-            }
-            if settings.cdFormat.usesBitrate {
-                GridRow {
-                    Text("比特率")
-                    Picker("比特率", selection: $settings.cdBitrate) {
-                        ForEach(PreviewSettings.cdBitrates, id: \.self) { bitrate in
-                            Text("\(bitrate) kbps").tag(bitrate)
-                        }
-                    }
-                    .labelsHidden()
+            cdRow("比特率") {
+                if settings.cdFormat.usesBitrate {
+                    SettingsDropdown(title: "比特率", selection: $settings.cdBitrate,
+                        options: settings.availableCDBitrates.map { SettingsDropdownOption(value: $0, title: "\($0) kbps") })
+                } else {
+                    SettingsDropdown(title: "比特率", selection: .constant(settings.cdFormat == .wav ? "1411 kbps" : "平均 950 kbps"),
+                        options: [SettingsDropdownOption(value: settings.cdFormat == .wav ? "1411 kbps" : "平均 950 kbps",
+                            title: settings.cdFormat == .wav ? "1411 kbps" : "平均 950 kbps")])
                 }
             }
-            cdFormatHint(capacityEstimate)
-            if settings.cdFormat.usesBitrate {
-                cdFormatHint("值越高，音质越好，但导入歌曲所需的数据容量也会增加。")
-            }
-            GridRow {
-                Text("导入模式")
-                Picker("导入模式", selection: $settings.cdImportMode) {
-                    ForEach(CDImportMode.allCases) { mode in Text(mode.label).tag(mode) }
-                }
-                .labelsHidden()
-            }
-            if settings.cdImportMode == .verifySource {
-                cdFormatHint("转换前复制并比对光盘源文件。")
+            Text(capacityEstimate).padding(.leading, 108)
+            Text("值越高，音质越好，但导入歌曲所需的数据容量也会增加。")
+                .fixedSize(horizontal: false, vertical: true).padding(.leading, 108)
+            cdRow("导入模式：") {
+                SettingsDropdown(title: "导入模式", selection: $settings.cdImportMode,
+                    options: CDImportMode.allCases.map { SettingsDropdownOption(value: $0, title: $0.label) })
+                    .disabled(!settings.cdFormat.usesBitrate)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(width: 406, alignment: .leading)
     }
 
-    private func cdFormatHint(_ title: String) -> some View {
-        GridRow {
-            Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
-            Text(title)
-                .font(.caption).foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
+    private func cdRow<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            Text(label).frame(width: 96, alignment: .leading)
+            content().frame(maxWidth: .infinity)
         }
     }
 
     private var capacityEstimate: String {
-        let size = (Double(settings.estimatedCDBytes) / 1_048_576).formatted(.number.precision(.fractionLength(1)))
-        if settings.cdFormat == .flac { return "每张CD的参考数据容量 \(size) MiB（80 分钟，未压缩 PCM）" }
-        return "每张CD的数据容量 \(size) MiB（80 分钟）"
+        let value: String
+        switch settings.cdFormat {
+        case .wav: value = "807.4"
+        case .flac: value = "543.5"
+        case .aac, .mp3:
+            value = (Double(settings.cdBitrate) * 1000 / 8 * 80 * 60 / 1_048_576)
+                .formatted(.number.precision(.fractionLength(1)))
+        }
+        return "每张CD的数据容量：\(value)MB (80 分钟)"
     }
 
-    private func chooseCDImportDirectory() {
-        let panel = NSOpenPanel()
-        panel.title = "选择 CD 自动导入位置"
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.directoryURL = settings.cdImportDirectory
-        panel.prompt = "选择"
-        panel.begin { response in
-            if response == .OK { settings.cdImportDirectory = panel.url }
+    private var metadataSettings: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            heading("获取歌曲信息")
+            Text("备注：获取歌曲信息需要连接互联网")
+            check("自动检索歌曲信息/执行12 Tone Analysis").padding(.leading, 8)
+            Text("如果以下信息不可用，则将进行自动检索。（不会覆盖现有信息。）")
+                .padding(.leading, 40)
+            VStack(alignment: .leading, spacing: 8) {
+                check("歌曲信息，例如歌曲名称、类型以及发行年份", initial: true)
+                check("封面图样", initial: true)
+                check("12 TONE ANALYSIS", initial: true)
+            }
+            .padding(.leading, 48)
+            .disabled(!flag("自动检索歌曲信息/执行12 Tone Analysis"))
+            heading("歌曲信息的获取时间").padding(.top, 36)
+            check("CD插入光驱时，自动获取CD信息和封面图样", initial: true)
+                .padding(.leading, 8).padding(.top, 8)
+            heading("Gracenote音乐识别服务").padding(.top, 36)
+            Text("设置Gracenote音乐识别服务的语言。")
+            HStack(spacing: 12) {
+                Text("已设置语言").frame(width: 80, alignment: .leading)
+                SettingsDropdown(title: "已设置语言", selection: $settings.recognitionLanguage,
+                    options: (PreviewSettings.recognitionLanguages + (PreviewSettings.recognitionLanguages.contains(settings.recognitionLanguage) ? [] : [settings.recognitionLanguage])).map { SettingsDropdownOption(value: $0, title: $0) })
+                    .frame(width: 200)
+            }
+            heading("清空识别结果数据").padding(.top, 36)
+            Text("先前的识别结果数据已删除，硬盘空间扩大。")
+            HStack { Spacer(); SettingsAction("删除") { explain("Gracenote 音乐识别服务尚未接入，当前没有可清除的识别结果数据。") } }
+                .padding(.trailing, 24)
         }
     }
 
-    private func heading(_ label: String) -> some View {
-        Text(label).foregroundStyle(.secondary).padding(.top, 5)
+    private var sharingSettings: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            heading("分享我的数据库")
+            check("与本地网络设备分享注册到我的数据库中的歌曲").padding(.leading, 8).padding(.top, 8)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 12) {
+                    Text("数据库名称:").frame(width: 92, alignment: .leading)
+                    TextField("", text: selection("数据库名称", "Music Center"))
+                        .textFieldStyle(.plain).padding(.horizontal, 6).frame(width: 200, height: 26)
+                        .background(.white).border(SettingsStyle.heading)
+                        .accessibilityLabel("数据库名称")
+                }.padding(.top, 8)
+                check("自动允许新设备访问我的数据库", initial: true).padding(.top, 8)
+                check("使用当前应用语言显示内容分类", initial: true)
+                Text("高解析度流媒体").padding(.leading, 32)
+                Text("低网速播放高解析度流媒体音源时可能导致播放中断。如果发生这种播放问题，降低音频流质量到CD水平。")
+                    .fixedSize(horizontal: false, vertical: true).padding(.leading, 32)
+                check("降低高解析度音源的音质到CD水平")
+            }
+            .padding(.leading, 8)
+            .disabled(!flag("与本地网络设备分享注册到我的数据库中的歌曲"))
+            .foregroundStyle(flag("与本地网络设备分享注册到我的数据库中的歌曲") ? SettingsStyle.ink : Color(white: 0.75))
+        }
     }
 
-    private func radio(_ values: [String], _ selected: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
-            ForEach(values, id: \.self) { value in
-                Button { selected.wrappedValue = value } label: {
-                    Label(value, systemImage: selected.wrappedValue == value ? "largecircle.fill.circle" : "circle")
-                        .labelStyle(.titleAndIcon)
-                        .foregroundStyle(selected.wrappedValue == value ? gold : .primary)
+    private var updateSettings: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            heading("自动软件更新")
+            Text("启动时通过互联网连接服务器，自动检查Music Center for PC和连接设备的软件更新信息。\n如果最新更新信息可用，则进行更新。")
+                .fixedSize(horizontal: false, vertical: true)
+            check("启动Music Center for PC时，自动检查更新信息。", initial: true)
+                .padding(.leading, 8).padding(.top, 8)
+            Text("注：\n必须连接互联网检查软件更新情况。\nMusic Center正在检查更新情况时将不会分享您的信息。")
+                .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("更新检查频率")
+                ForEach(["每周", "每日", "每次启动时"], id: \.self) { value in
+                    SettingsRadio(value, selected: selection("更新检查频率", "每周").wrappedValue == value) {
+                        settings.choices["更新检查频率"] = value
+                    }.padding(.leading, 8)
                 }
-                .buttonStyle(.plain)
+            }
+            .padding(.leading, 40)
+            .disabled(!flag("启动Music Center for PC时，自动检查更新信息。", initial: true))
+            heading("手动软件更新").padding(.top, 36)
+            Text("立即检查Music Center for PC和连接设备的软件更新信息。")
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Spacer()
+                SettingsAction("检查软件更新…", width: 112) {
+                    explain("Sony 软件更新服务尚未接入。")
+                }
             }
         }
-        .padding(.leading, 6)
     }
 
-    private func options(_ title: String, _ values: [String], _ selected: Binding<String>) -> some View {
-        Picker(title, selection: selected) {
-            ForEach(values, id: \.self) { Text($0).tag($0) }
+    private var otherSettings: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            heading("音效")
+            check("歌曲从CD完全导入并传输到设备后，将播放通知声音。", initial: true)
+                .padding(.leading, 8).padding(.top, 8)
+            heading("清空播放历史").padding(.top, 36)
+            Text("清空全部歌曲播放历史信息。")
+            HStack { Spacer(); SettingsAction("清空") { explain("暂不支持从这里清空播放历史。") } }
+                .padding(.trailing, 76)
+            heading("删除临时文件").padding(.top, 24)
+            Text("删除传输中创建的文件和临时文件，增加硬盘空间。")
+            HStack { Spacer(); SettingsAction("删除") { explain("暂不支持从这里删除传输缓存或临时文件。") } }
+                .padding(.trailing, 76)
         }
-        .pickerStyle(.menu)
-        .frame(maxWidth: 340, alignment: .leading)
     }
 
+    private func heading(_ label: String) -> some View { Text(label).foregroundStyle(SettingsStyle.heading) }
     private func check(_ title: String, initial: Bool = false) -> some View {
-        Toggle(title, isOn: Binding(get: { flag(title, initial: initial) },
-                                    set: { settings.flags[title] = $0 }))
-            .toggleStyle(.checkbox).tint(gold)
+        SettingsCheck(title, isOn: Binding(get: { flag(title, initial: initial) }, set: { settings.flags[title] = $0 }))
     }
-
     private func flag(_ title: String, initial: Bool = false) -> Bool { settings.flags[title] ?? initial }
     private func selection(_ title: String, _ initial: String) -> Binding<String> {
         Binding(get: { settings.choices[title] ?? initial }, set: { settings.choices[title] = $0 })
     }
-
-    private func box(_ text: String, height: CGFloat) -> some View {
-        Text(text).padding(8).frame(width: 335, height: height, alignment: .topLeading).border(.secondary)
+    private func chooseImportFolder() {
+        chooseFolder(title: "选择自动导入文件夹", initial: nil) { folder in
+            if !settings.autoImportFolders.contains(folder.path) { settings.autoImportFolders.append(folder.path) }
+            selectedFolder = folder.path
+        }
     }
-
-    private func unavailable(_ title: String) -> some View {
-        Button(title) {}.disabled(true)
+    private func chooseDestination() {
+        chooseFolder(title: "选择文件目的地", initial: settings.importDestination) { folder in
+            settings.cdImportDirectory = folder
+        }
+    }
+    private func chooseFolder(title: String, initial: URL?, selected: @escaping (URL) -> Void) {
+        let panel = NSOpenPanel()
+        panel.title = title
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.directoryURL = initial
+        panel.prompt = "选择文件夹"
+        panel.begin { response in if response == .OK, let folder = panel.url { selected(folder) } }
     }
 }
 
+extension PreviewSettings {
+    static let recognitionLanguages = ["德语", "英语", "西班牙语", "芬兰语", "法语", "意大利语", "日语", "朝鲜语",
+        "荷兰语", "波兰语", "葡萄牙语", "俄语", "瑞典语", "土耳其语", "简体中文", "繁体中文"]
 
-private struct CDDrivePicker: NSViewRepresentable {
-    @Binding var selection: String?
-    let drives: [AudioCDDrive]
-    let refresh: () -> Void
-
-    func makeNSView(context: Context) -> NSPopUpButton {
-        let button = NSPopUpButton(frame: .zero, pullsDown: false)
-        button.bezelStyle = .rounded
-        button.font = .systemFont(ofSize: 13)
-        button.autoenablesItems = false
-        button.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        button.setAccessibilityLabel("光驱")
-        button.target = context.coordinator
-        button.action = #selector(Coordinator.choose(_:))
-        return button
+    var recognitionLanguage: String {
+        get {
+            let original = choices["识别语言"] ?? "繁体中文"
+            return ["English": "英语", "日本語": "日语", "繁體中文": "繁体中文"][original] ?? original
+        }
+        set { choices["识别语言"] = newValue }
     }
 
-    func updateNSView(_ button: NSPopUpButton, context: Context) {
-        context.coordinator.parent = self
-        button.removeAllItems()
-        button.addItem(withTitle: drives.isEmpty ? "" : "自动选择")
-        for drive in drives {
-            let item = NSMenuItem(title: drive.name, action: nil, keyEquivalent: "")
-            item.representedObject = drive.id
-            button.menu?.addItem(item)
+    var autoImportFolders: [String] {
+        get {
+            guard let raw = choices["自动导入文件夹"], let data = raw.data(using: .utf8),
+                  let folders = try? JSONDecoder().decode([String].self, from: data) else { return [] }
+            return folders
         }
-        if let selection, !drives.contains(where: { $0.id == selection }) {
-            let unavailable = NSMenuItem(title: "光驱暂不可用", action: nil, keyEquivalent: "")
-            unavailable.representedObject = selection
-            unavailable.isEnabled = false
-            button.menu?.addItem(unavailable)
+        set {
+            choices["自动导入文件夹"] = (try? JSONEncoder().encode(newValue)).flatMap { String(data: $0, encoding: .utf8) }
         }
-        button.menu?.addItem(.separator())
-        let refreshItem = NSMenuItem(title: "刷新光驱列表", action: nil, keyEquivalent: "")
-        refreshItem.tag = 1
-        button.menu?.addItem(refreshItem)
-        context.coordinator.restoreSelection(button)
     }
-
-    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
-
-    @MainActor
-    final class Coordinator: NSObject {
-        var parent: CDDrivePicker
-
-        init(parent: CDDrivePicker) { self.parent = parent }
-
-        func restoreSelection(_ button: NSPopUpButton) {
-            let item = button.itemArray.first { ($0.representedObject as? String) == parent.selection && $0.tag == 0 && !$0.isSeparatorItem }
-            button.select(item)
-        }
-
-        @objc func choose(_ button: NSPopUpButton) {
-            guard let item = button.selectedItem else { return }
-            if item.tag == 1 {
-                restoreSelection(button)
-                parent.refresh()
-            } else {
-                parent.selection = item.representedObject as? String
-            }
-        }
+    var importDestination: URL {
+        cdImportDirectory ?? FileManager.default.urls(for: .musicDirectory, in: .userDomainMask)[0]
+            .appending(path: "Music Center", directoryHint: .isDirectory)
     }
 }
