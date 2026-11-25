@@ -10,6 +10,7 @@ struct TrackTags {
     var disc: Int?
     var number: Int?
     var artwork: Data?
+    var properties: [PropertyField: String] = [:]
 
     static func read(_ url: URL, asset: AVURLAsset) async -> Self {
         if url.pathExtension.lowercased() == "flac", let tags = try? readFLAC(url) {
@@ -28,6 +29,24 @@ struct TrackTags {
         }
         tags.disc = await position(.id3MetadataPartOfASet, .iTunesMetadataDiscNumber, in: items)
         tags.number = await position(.id3MetadataTrackNumber, .iTunesMetadataTrackNumber, in: items)
+        let propertyIdentifiers: [(PropertyField, [AVMetadataIdentifier])] = [
+            (.titleSort, [.id3MetadataTitleSortOrder]),
+            (.artistSort, [.id3MetadataPerformerSortOrder]),
+            (.albumSort, [.id3MetadataAlbumSortOrder]),
+            (.genre, [.iTunesMetadataUserGenre, .id3MetadataContentType]),
+            (.year, [.iTunesMetadataReleaseDate, .commonIdentifierCreationDate]),
+            (.composer, [.iTunesMetadataComposer, .id3MetadataComposer]),
+            (.publisher, [.commonIdentifierPublisher]),
+            (.copyright, [.commonIdentifierCopyrights, .iTunesMetadataCopyright])
+        ]
+        for (field, identifiers) in propertyIdentifiers {
+            for identifier in identifiers {
+                if let value = await string(identifier, in: common + items) {
+                    tags.properties[field] = value
+                    break
+                }
+            }
+        }
         for item in AVMetadataItem.metadataItems(from: common, filteredByIdentifier: .commonIdentifierArtwork) {
             if let data = try? await item.load(.dataValue), let artwork = thumbnail(data) {
                 tags.artwork = artwork
@@ -105,6 +124,12 @@ struct TrackTags {
                 tags.albumArtist = fields["ALBUMARTIST"] ?? fields["ALBUM ARTIST"]
                 tags.disc = position(fields["DISCNUMBER"])
                 tags.number = position(fields["TRACKNUMBER"])
+                let propertyKeys: [(PropertyField, String)] = [(.titleSort, "TITLESORT"), (.artistSort, "ARTISTSORT"),
+                    (.albumSort, "ALBUMSORT"), (.albumArtistSort, "ALBUMARTISTSORT"), (.genre, "GENRE"),
+                    (.year, "DATE"), (.composer, "COMPOSER"), (.publisher, "PUBLISHER"), (.label, "ORGANIZATION"),
+                    (.copyright, "COPYRIGHT"), (.totalTracks, "TRACKTOTAL"), (.totalDiscs, "DISCTOTAL")]
+                for (field, key) in propertyKeys { tags.properties[field] = fields[key] }
+
             } else if type == 6, !hasFrontCover, let data = try file.read(upToCount: length),
                       let picture = flacPicture(data), (picture.front || tags.artwork == nil),
                       let artwork = thumbnail(picture.image) {
@@ -122,7 +147,7 @@ struct TrackTags {
         var reader = BlockReader(data: data, littleEndian: true)
         guard let vendorLength = reader.uint32(), reader.skip(vendorLength),
               let count = reader.uint32(), count <= reader.remaining / 4 else { return [:] }
-        let keys: Set<String> = ["TITLE", "ARTIST", "ALBUM", "ALBUMARTIST", "ALBUM ARTIST", "DISCNUMBER", "TRACKNUMBER"]
+        let keys: Set<String> = ["TITLE", "ARTIST", "ALBUM", "ALBUMARTIST", "ALBUM ARTIST", "DISCNUMBER", "TRACKNUMBER", "TITLESORT", "ARTISTSORT", "ALBUMSORT", "ALBUMARTISTSORT", "GENRE", "DATE", "COMPOSER", "PUBLISHER", "ORGANIZATION", "COPYRIGHT", "TRACKTOTAL", "DISCTOTAL"]
         var fields: [String: String] = [:]
         for _ in 0..<count {
             guard let length = reader.uint32(), let field = reader.bytes(length) else { break }

@@ -60,7 +60,7 @@ struct TrackPlayback {
     let count: Int
 }
 
-struct Playlist: Identifiable {
+struct Playlist: Identifiable, Sendable {
     let id: UUID
     let name: String
 }
@@ -76,6 +76,7 @@ final class Library {
     let directory: URL
     private(set) var tracks: [Track] = []
     private(set) var playlists: [Playlist] = []
+    private(set) var propertyRecords: [PropertyKey: PropertyRecord] = [:]
     private(set) var playbackHistory: [UUID: TrackPlayback] = [:]
     private(set) var playlistEntries: [UUID: [PlaylistEntry]] = [:]
     private(set) var importing = false
@@ -205,6 +206,18 @@ final class Library {
         }
     }
 
+    func saveProperties(_ changes: [PropertyChange]) throws {
+        guard let database else { throw LibraryDatabase.Failure(message: "曲库不可用。") }
+        try database.transaction {
+            var records = try database.loadProperties()
+            for change in changes where !change.fields.isEmpty || change.changesArtwork {
+                try change.validate()
+                try database.applyProperties(change, records: &records)
+            }
+        }
+        try reload()
+    }
+
     func createPlaylist(_ name: String, tracks: [Track] = []) -> UUID? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
@@ -240,13 +253,19 @@ final class Library {
     }
 
     func deletePlaylist(_ id: UUID) -> Bool {
-        update { try $0.execute("DELETE FROM playlists WHERE id = ?", [.uuid(id)]) }
+        update { database in
+            try database.transaction {
+                try database.execute("DELETE FROM library_properties WHERE kind = 'playlist' AND identity = ?", [.uuid(id)])
+                try database.execute("DELETE FROM playlists WHERE id = ?", [.uuid(id)])
+            }
+        }
     }
 
     func removeFromLibrary(_ trackIDs: Set<UUID>) -> Bool {
         update { database in
             try database.transaction {
                 for id in trackIDs {
+                    try database.execute("DELETE FROM library_properties WHERE kind = 'song' AND identity = ?", [.uuid(id)])
                     try database.execute("DELETE FROM tracks WHERE id = ?", [.uuid(id)])
                 }
             }
@@ -280,6 +299,7 @@ final class Library {
         guard let database else { return }
         let snapshot = try database.load()
         (tracks, playlists, playlistEntries, playbackHistory) = snapshot
+        propertyRecords = try database.loadProperties()
     }
 }
 
@@ -456,6 +476,7 @@ private final class LibraryDatabase {
                 try execute("ALTER TABLE tracks ADD COLUMN metadata_read INTEGER NOT NULL DEFAULT 0")
             }
             try execute("CREATE TABLE IF NOT EXISTS playlists (id TEXT PRIMARY KEY, name TEXT NOT NULL)")
+            try execute("CREATE TABLE IF NOT EXISTS library_properties (kind TEXT NOT NULL, identity TEXT NOT NULL, data BLOB NOT NULL, PRIMARY KEY(kind, identity))")
             try execute("""
                 CREATE TABLE IF NOT EXISTS playlist_entries (
                     id TEXT NOT NULL PRIMARY KEY,
@@ -518,6 +539,7 @@ private final class LibraryDatabase {
         }
         try query("PRAGMA foreign_key_check") { _ in throw Failure(message: "备份中的播放列表引用无效。") }
         _ = try load()
+        _ = try loadProperties()
         var data: Data?
         try query("SELECT format, preferences FROM music_center_backup") { row in
             guard data == nil, sqlite3_column_int(row, 0) == 1, let bytes = sqlite3_column_blob(row, 1) else {
@@ -536,6 +558,7 @@ private final class LibraryDatabase {
         try execute("ATTACH DATABASE ? AS restore", [.text(source)])
         defer { try? execute("DETACH DATABASE restore") }
         try transaction {
+            try execute("DELETE FROM library_properties")
             try execute("DELETE FROM playlist_entries")
             try execute("DELETE FROM playlists")
             try execute("DELETE FROM tracks")
@@ -546,7 +569,15 @@ private final class LibraryDatabase {
                 INSERT INTO playlist_entries (id, playlist_id, track_id, position)
                 SELECT id, playlist_id, track_id, position FROM restore.playlist_entries
                 """)
+            var sourceHasProperties = false
+            try query("SELECT 1 FROM restore.sqlite_schema WHERE type = 'table' AND name = 'library_properties'") { _ in
+                sourceHasProperties = true
+            }
+            if sourceHasProperties {
+                try execute("INSERT INTO library_properties SELECT kind, identity, data FROM restore.library_properties")
+            }
             _ = try load()
+            _ = try loadProperties()
             try applyingSettings()
         }
     }
@@ -661,6 +692,7 @@ private final class LibraryDatabase {
 
     func createPlaylist(_ id: UUID, name: String) throws {
         try execute("INSERT INTO playlists (id, name) VALUES (?, ?)", [.uuid(id), .text(name)])
+        try writeProperty(PropertyRecord(createdAt: .now), key: .playlist(id))
     }
 
     func add(_ tracks: [Track], to playlist: UUID) throws {
@@ -693,6 +725,110 @@ private final class LibraryDatabase {
                     """, [.integer(Int64(position)), .uuid(playlist), .uuid(entry)])
             }
         }
+    }
+
+    func loadProperties() throws -> [PropertyKey: PropertyRecord] {
+        var exists = false
+        try query("SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'library_properties'") { _ in exists = true }
+        guard exists else { return [:] } // Backups created before properties were added.
+        var records: [PropertyKey: PropertyRecord] = [:]
+        try query("SELECT kind, identity, data FROM library_properties") { row in
+            guard let kind = PropertyKey.Kind(rawValue: string(row, 0)), let pointer = sqlite3_column_blob(row, 2) else {
+                throw Failure(message: "曲库包含无效的属性记录。")
+            }
+            let data = Data(bytes: pointer, count: Int(sqlite3_column_bytes(row, 2)))
+            records[PropertyKey(kind: kind, identity: string(row, 1))] = try JSONDecoder().decode(PropertyRecord.self, from: data)
+        }
+        return records
+    }
+
+    private func writeProperty(_ record: PropertyRecord, key: PropertyKey) throws {
+        let data = try JSONEncoder().encode(record)
+        try execute("INSERT INTO library_properties (kind, identity, data) VALUES (?, ?, ?) ON CONFLICT(kind, identity) DO UPDATE SET data = excluded.data",
+                    [.text(key.kind.rawValue), .text(key.identity), .blob(data)])
+    }
+
+    func applyProperties(_ change: PropertyChange, records: inout [PropertyKey: PropertyRecord]) throws {
+        let subject = change.subject
+        var owner = records[subject.key] ?? PropertyRecord()
+        owner.fields.merge(change.fields, uniquingKeysWith: { _, new in new })
+        owner.modifiedAt = .now
+        if change.changesArtwork { owner.artwork = change.artwork; owner.overridesArtwork = true }
+        if subject.key.kind == .playlist {
+            guard let playlist = subject.playlist else { throw Failure(message: "播放列表不可用。") }
+            try requireEntity("playlists", id: playlist.id)
+            if let title = change.fields[.title] { try execute("UPDATE playlists SET name = ? WHERE id = ?", [.text(title), .uuid(playlist.id)]) }
+            owner.fields[.title] = nil // Playlist names are owned by the playlists table.
+            try writeProperty(owner, key: subject.key)
+            records[subject.key] = owner
+            return
+        }
+        let targets = subject.localTracks
+        guard subject.hasOnlyLocalTracks else { throw Failure(message: "参考曲库的属性只供查看。请切换到本地曲库后编辑。") }
+        for track in targets { try requireEntity("tracks", id: track.id) }
+        var songFields = change.fields
+        if subject.key.kind == .album {
+            songFields = [:]
+            for (field, value) in change.fields {
+                let mapped: PropertyField = switch field {
+                case .title: .album
+                case .titleSort: .albumSort
+                case .artist: .albumArtist
+                case .artistSort: .albumArtistSort
+                default: field
+                }
+                songFields[mapped] = value
+            }
+        } else if subject.key.kind == .artist {
+            songFields = [:]
+            if let name = change.fields[.artist] { songFields[subject.artistByTrack ? .artist : .albumArtist] = name }
+            if let sort = change.fields[.artistSort] { songFields[subject.artistByTrack ? .artistSort : .albumArtistSort] = sort }
+        }
+        for track in targets where !songFields.isEmpty || (change.changesArtwork && subject.key.kind != .artist) {
+            var assignments: [String] = []
+            var values: [Value] = []
+            for (field, column) in [(PropertyField.title, "title"), (.artist, "artist"), (.album, "album"), (.albumArtist, "album_artist")] {
+                if let value = songFields[field] { assignments.append(column + " = ?"); values.append(.text(value)) }
+            }
+            for (field, column) in [(PropertyField.number, "track_number"), (.disc, "disc_number")] {
+                if let raw = songFields[field] {
+                    assignments.append(column + " = ?")
+                    values.append(Int(raw).map { .integer(Int64($0)) } ?? .null)
+                }
+            }
+            if change.changesArtwork && subject.key.kind != .artist {
+                assignments.append("artwork = ?"); values.append(change.artwork.map(Value.blob) ?? .null)
+            }
+            if !assignments.isEmpty {
+                try execute("UPDATE tracks SET " + assignments.joined(separator: ", ") + " WHERE id = ?", values + [.uuid(track.id)])
+            }
+            let key = PropertyKey.song(track.id)
+            var record = records[key] ?? PropertyRecord()
+            let core: Set<PropertyField> = [.title, .artist, .album, .albumArtist, .number, .disc]
+            record.fields.merge(songFields.filter { !core.contains($0.key) }, uniquingKeysWith: { _, new in new })
+            record.modifiedAt = .now
+            // Track artwork lives in the tracks table, not in a duplicate JSON blob.
+            try writeProperty(record, key: key)
+            records[key] = record
+        }
+        // Album fields/artwork are owned by their member songs; keep no competing copy.
+        if subject.key.kind == .artist {
+            let key = PropertyKey.artist(change.fields[.artist] ?? subject.key.identity)
+            var photo = records[key] ?? owner
+            photo.fields = [:]
+            if change.changesArtwork { photo.artwork = change.artwork; photo.overridesArtwork = true }
+            if photo.overridesArtwork {
+                photo.modifiedAt = .now
+                try writeProperty(photo, key: key)
+                records[key] = photo
+            }
+        }
+    }
+
+    private func requireEntity(_ table: String, id: UUID) throws {
+        var exists = false
+        try query("SELECT 1 FROM " + table + " WHERE id = ?", [.uuid(id)]) { _ in exists = true }
+        guard exists else { throw Failure(message: "此项目已从曲库移除，请关闭属性后重新选择。") }
     }
 
     func transaction(_ operation: () throws -> Void) throws {

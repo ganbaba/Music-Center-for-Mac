@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct CapturedTrack: Identifiable {
+struct CapturedTrack: Identifiable, Sendable {
     private let sourceID: UUID
     private(set) var playlistEntryID: UUID?
     private(set) var displayPosition: Int?
@@ -68,7 +68,7 @@ func previewTime(_ seconds: Double) -> String {
     return String(format: "%02d:%02d", total / 60, total % 60)
 }
 
-struct TrackCollection: Identifiable {
+struct TrackCollection: Identifiable, Sendable {
     let key: AlbumKey
     let tracks: [CapturedTrack]
     var id: AlbumKey { key }
@@ -141,15 +141,18 @@ struct CapturedCover: View {
     }
 }
 
-struct PlaylistGroup: Identifiable {
+struct PlaylistGroup: Identifiable, Sendable {
     let playlist: Playlist
     let tracks: [CapturedTrack]
+    var propertyRecord: PropertyRecord? = nil
     var id: UUID { playlist.id }
     var name: String { playlist.name }
     var duration: String { previewTime(tracks.reduce(0) { $0 + $1.seconds }) }
     var summary: String { "\(tracks.count)歌曲, \(duration)" }
     var size: String { "\(tracks.reduce(0) { $0 + $1.sizeMB }.formatted(.number.precision(.fractionLength(0...1))))MB" }
-    var artwork: Data? { tracks.lazy.compactMap { $0.localTrack?.artwork }.first }
+    var artwork: Data? {
+        propertyRecord?.overridesArtwork == true ? propertyRecord?.artwork : tracks.lazy.compactMap { $0.localTrack?.artwork }.first
+    }
 }
 
 struct PlaylistCover: View {
@@ -179,7 +182,10 @@ struct CapturedTable: View {
     var isGrid = false
     @Binding var selection: Set<UUID>
     var onShowAlbum: (CapturedTrack) -> Void
-    var onProperties: (CapturedTrack) -> Void
+    var onProperties: ([CapturedTrack], CapturedTrack) -> Void
+    var onCollectionProperties: (TrackCollection, LibraryPage) -> Void = { _, _ in }
+    var onPlaylistProperties: (PlaylistGroup) -> Void = { _ in }
+    var propertyRecords: [PropertyKey: PropertyRecord] = [:]
     var connected: Bool
     var playlists: [Playlist] = []
     var playlistGroups: [PlaylistGroup]? = nil
@@ -333,7 +339,7 @@ struct CapturedTable: View {
                 onShowAlbum(track)
             }, properties: {
                 menu = nil
-                onProperties(track)
+                onProperties(selected.count > 1 ? selected : order, track)
             }, play: play.map { action in
                 {
                     menu = nil
@@ -605,6 +611,8 @@ struct CapturedTable: View {
         Button("前往播放列表详情界面") { openPlaylist(group.id) }
         Divider()
         Button("删除播放列表", role: .destructive) { deletePlaylist(group.playlist) }
+        Divider()
+        Button("属性") { onPlaylistProperties(group) }
     }
 
     @ViewBuilder
@@ -613,7 +621,9 @@ struct CapturedTable: View {
         let title = group.key.title
         let open = expanded.contains(group.id)
         let reference = group.tracks.first?.localTrack == nil
-        let artwork = group.tracks.lazy.compactMap { $0.localTrack?.artwork }.first
+        let record = propertyRecords[.artist(group.key.title)]
+        let artwork = isArtist && record?.overridesArtwork == true ? record?.artwork :
+            group.tracks.lazy.compactMap { $0.localTrack?.artwork }.first
         if isGrid {
             VStack(alignment: isArtist ? .center : .leading, spacing: 2) {
                 CapturedCover(artwork: artwork, reference: reference)
@@ -635,6 +645,7 @@ struct CapturedTable: View {
                 selection = selectedCover == nil ? [] : Set(group.tracks.map(\.id))
             }
             .padding(.top, 9)
+            .contextMenu { collectionActions(group, page: page) }
         } else {
             Button {
                 if open { expanded.remove(group.id) } else { expanded.insert(group.id) }
@@ -659,8 +670,17 @@ struct CapturedTable: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .contextMenu { collectionActions(group, page: page) }
             if open { rows(ordered(group.tracks)) }
         }
+    }
+
+    @ViewBuilder private func collectionActions(_ group: TrackCollection, page: LibraryPage) -> some View {
+        Button("播放") { if let first = group.tracks.first { play?(group.tracks, first) } }.disabled(play == nil || group.tracks.isEmpty)
+        Button("播放下一曲") { enqueue?(group.tracks, .next) }.disabled(enqueue == nil || group.tracks.isEmpty)
+        Button("添加到播放队列") { enqueue?(group.tracks, .end) }.disabled(enqueue == nil || group.tracks.isEmpty)
+        Divider()
+        Button("属性") { onCollectionProperties(group, page) }
     }
 
     private func disclosure(_ open: Bool) -> some View {
@@ -723,7 +743,16 @@ struct CapturedTable: View {
         case "专辑艺术家": track.albumArtist
         case "格式": track.localTrack?.format ?? "FLAC"
         case "歌碟编号": track.localTrack?.disc.map(String.init) ?? ""
+        case "类型": detail(track, .genre)
+        case "发行年份": detail(track, .year)
+        case "作曲家": detail(track, .composer)
+        case "评价": detail(track, .rating)
+        case "均衡器": detail(track, .equalizer)
         default: ""
         }
     }
+    private func detail(_ track: CapturedTrack, _ field: PropertyField) -> String {
+        propertyRecords[.song(track.localTrack?.id ?? track.id)]?.fields[field] ?? ""
+    }
+
 }

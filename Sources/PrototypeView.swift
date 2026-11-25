@@ -42,7 +42,7 @@ struct PrototypeView: View {
     @State private var transferRequest: WalkmanPreviewRequest?
     @State private var managedDevice: WalkmanVolume?
     @State private var trackSelection: Set<UUID> = []
-    @State private var properties: CapturedTrack?
+    @State private var properties: PropertiesRequest?
     @State private var localRows: [CapturedTrack] = []
     @State private var showsImporter = false
     @State private var exportRequest: AudioExportRequest?
@@ -146,7 +146,7 @@ struct PrototypeView: View {
         .foregroundStyle(ink)
         .background(canvas)
         .environment(\.colorScheme, display.appearance.dark ? .dark : .light)
-        .blur(radius: settingsPage == nil && audioPanel != .equalizer && !showsPlaylistPrompt ? 0 : 3)
+        .blur(radius: settingsPage == nil && properties == nil && audioPanel != .equalizer && !showsPlaylistPrompt ? 0 : 3)
         .overlay {
             if showsMenu {
                 ZStack(alignment: .topLeading) {
@@ -249,6 +249,25 @@ struct PrototypeView: View {
                 .environment(\.colorScheme, .light)
             }
         }
+        .overlay {
+            if let properties {
+                GeometryReader { geometry in
+                    let scale = min(1, (geometry.size.width - 24) / 640)
+                    let height = min(690, (geometry.size.height - 24) / scale)
+                    ZStack {
+                        Color(white: 0.93).opacity(0.68)
+                        PropertiesPanel(request: properties, records: library.propertyRecords, history: library.playbackHistory,
+                            choices: propertyChoices, equalizerNames: (EqualizerSettings.builtIns + equalizer.custom).map(\.name),
+                            height: height, save: { changes in
+                                try library.saveProperties(changes)
+                                player.refreshMetadata(library.tracks)
+                            }, close: { self.properties = nil })
+                            .scaleEffect(scale).frame(width: 640 * scale, height: height * scale)
+                    }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .environment(\.colorScheme, .light)
+            }
+        }
         .task { [library, player] in
             player.setInitialAudio(outputUID: settings.outputDeviceUID, equalizer: equalizer, renderingRate: settings.outputSampleRate)
             player.onPlaybackStarted = { [weak library] track in library?.recordPlayback(of: track) }
@@ -326,22 +345,6 @@ struct PrototypeView: View {
             Button("确定") { library.error = nil; player.error = nil; preferences.error = nil }
         } message: {
             Text(library.error ?? player.error ?? preferences.error ?? "")
-        }
-        .sheet(item: $properties) { track in
-            VStack(alignment: .leading, spacing: 13) {
-                Text("属性").font(.headline)
-                Text(track.title).fontWeight(.semibold)
-                LabeledContent("艺术家", value: track.artist)
-                LabeledContent("专辑", value: track.album)
-                LabeledContent("歌曲长度", value: track.duration)
-                LabeledContent("文件大小", value: track.size)
-                LabeledContent("歌曲编号", value: track.number.map(String.init) ?? "—")
-                Button("确定") { properties = nil }
-                    .keyboardShortcut(.defaultAction)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .padding(24)
-            .frame(width: 430)
         }
         .alert("恢复备份？", isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } }),
                presenting: pendingRestore) { url in
@@ -929,7 +932,7 @@ struct PrototypeView: View {
         let tracks = entries.enumerated().compactMap { index, entry in
             rowsByID[entry.trackID]?.inPlaylist(entryID: entry.id, position: index + 1)
         }
-        return PlaylistGroup(playlist: playlist, tracks: tracks)
+        return PlaylistGroup(playlist: playlist, tracks: tracks, propertyRecord: library.propertyRecords[.playlist(playlist.id)])
     }
 
     private func openPlaylist(_ id: UUID?) {
@@ -984,6 +987,8 @@ struct PrototypeView: View {
                             Button("添加到播放队列") { enqueue(group.tracks, placement: .end) }.disabled(group.tracks.isEmpty)
                             Divider()
                             Button("删除播放列表", role: .destructive) { pendingPlaylistDeletion = group.playlist }
+                            Divider()
+                            Button("属性") { properties = PropertiesRequest(subjects: [.playlist(group)]) }
                         } label: {
                             Image(systemName: "ellipsis").frame(width: 25, height: 24)
                         }
@@ -1011,7 +1016,10 @@ struct PrototypeView: View {
                           selectPage(.albums)
                           search = track.album
                       },
-                      onProperties: { properties = $0 }, connected: sampleDevice, playlists: library.playlists,
+                      onProperties: openSongProperties,
+                      onCollectionProperties: openCollectionProperties,
+                      onPlaylistProperties: { properties = PropertiesRequest(subjects: [.playlist($0)]) },
+                      propertyRecords: library.propertyRecords, connected: sampleDevice, playlists: library.playlists,
                       playlistGroups: playlistGroups, showsDisplayPositions: playlistID != nil || page.isHistory, playlistID: playlistID,
                       allowsReordering: playlistID != nil && search.isEmpty,
                       reorderPlaylist: { library.reorderPlaylist($0, replacing: $1, in: $2) },
@@ -1031,6 +1039,41 @@ struct PrototypeView: View {
                       selectedRowColor: display.appearance.selectedTrack,
                       groupArtistsByTrack: display.groupArtistsByTrack,
                       onNewPlaylist: { openPlaylistPrompt(tracks: $0) })
+    }
+
+    private var propertyChoices: [PropertyField: [String]] {
+        var values: [PropertyField: Set<String>] = [:]
+        for track in library.tracks {
+            values[.artist, default: []].insert(track.artist)
+            values[.albumArtist, default: []].insert(track.albumArtist)
+        }
+        for record in library.propertyRecords.values {
+            for field in [PropertyField.artist, .albumArtist, .genre] {
+                if let value = record.fields[field] { values[field, default: []].insert(value) }
+            }
+        }
+        return values.mapValues { $0.sorted() }
+    }
+
+    private func openSongProperties(_ order: [CapturedTrack], selected: CapturedTrack) {
+        let selectedRows = order.filter { trackSelection.contains($0.id) }
+        if selectedRows.count > 1 {
+            properties = PropertiesRequest(subjects: [.songs(selectedRows)])
+        } else {
+            let subjects = order.map { PropertySubject.songs([$0]) }
+            properties = PropertiesRequest(subjects: subjects, selectedIndex: order.firstIndex { $0.id == selected.id } ?? 0)
+        }
+    }
+
+    private func openCollectionProperties(_ group: TrackCollection, page: LibraryPage) {
+        let groups = TrackCollection.group(capturedTracks, by: page, groupArtistsByTrack: display.groupArtistsByTrack)
+        let complete = TrackCollection.group(sampleLibrary ? CapturedLibrary.tracks : localRows,
+            by: page, groupArtistsByTrack: display.groupArtistsByTrack)
+        let byID = Dictionary(uniqueKeysWithValues: complete.map { ($0.id, $0) })
+        let subjects = groups.map {
+            PropertySubject.collection(byID[$0.id] ?? $0, artist: page == .artists, byTrack: display.groupArtistsByTrack)
+        }
+        properties = PropertiesRequest(subjects: subjects, selectedIndex: groups.firstIndex { $0.id == group.id } ?? 0)
     }
 
     private var newPlaylistButton: some View {
@@ -1338,7 +1381,7 @@ struct PrototypeView: View {
             .padding(.top, 12)
             CapturedTable(tracks: CapturedLibrary.tracks, columns: ["标题", "高解析度", "艺术家", "专辑", "歌曲长度"],
                           isDevice: true, selection: $trackSelection,
-                          onShowAlbum: { _ in selectPage(.albums) }, onProperties: { properties = $0 }, connected: false, columnWidths: $settings.columnWidths)
+                          onShowAlbum: { _ in selectPage(.albums) }, onProperties: openSongProperties, connected: false, columnWidths: $settings.columnWidths)
                 .padding(.top, 6)
         }
         .padding(.leading, 28)

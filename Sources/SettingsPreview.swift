@@ -137,7 +137,6 @@ struct SettingsPreview: View {
     @State private var draft: PreviewSettings
     @State private var shownSelection: String?
     @State private var hiddenSelection: String?
-    @State private var dropdown: SettingsDropdownRequest?
     let panelHeight: CGFloat
     @State private var explanation: String?
     let cdDrives: [AudioCDDrive]
@@ -221,26 +220,7 @@ struct SettingsPreview: View {
         .font(.system(size: 12))
         .foregroundStyle(ink)
         .frame(width: 710, height: panelHeight)
-        .environment(\.presentSettingsDropdown) { dropdown = $0 }
-        .environment(\.activeSettingsDropdown, dropdown?.id)
-        .overlayPreferenceValue(SettingsDropdownAnchors.self) { anchors in
-            GeometryReader { geometry in
-                if let dropdown, let anchor = anchors[dropdown.id] {
-                    let bounds = geometry[anchor]
-                    let below = max(0, geometry.size.height - 6 - bounds.maxY)
-                    let above = max(0, bounds.minY - 6)
-                    let showBelow = below >= min(CGFloat(dropdown.titles.count) * 22 + 2, 280) || below >= above
-                    let height = min(CGFloat(dropdown.titles.count) * 22 + 2, showBelow ? below : above)
-                    ZStack(alignment: .topLeading) {
-                        Color.black.opacity(0.001).onTapGesture { self.dropdown = nil }
-                        SettingsDropdownList(request: dropdown, height: height) { self.dropdown = nil }
-                            .frame(width: bounds.width)
-                            .offset(x: bounds.minX, y: showBelow ? bounds.maxY : bounds.minY - height)
-                    }
-                    .id(dropdown.id)
-                }
-            }
-        }
+        .modifier(SettingsDropdownHost(resetID: page.rawValue))
         .alert("Music Center UI Preview", isPresented: Binding(get: { explanation != nil }, set: { if !$0 { explanation = nil } })) {
             Button("确定") { explanation = nil }
         } message: { Text(explanation ?? "") }
@@ -256,7 +236,6 @@ struct SettingsPreview: View {
             ForEach(SettingsPage.allCases, id: \.self) { destination in
                 Button {
                     page = destination
-                    dropdown = nil
                 } label: {
                     sidebarLabel(destination.rawValue)
                 }
@@ -681,5 +660,67 @@ private struct SettingsDropdownList: View {
         guard request.enabled[index] else { return }
         request.select(index)
         close()
+    }
+}
+
+struct SettingsDropdownHost: ViewModifier {
+    let resetID: String
+    @State private var dropdown: SettingsDropdownRequest?
+    func body(content: Content) -> some View {
+        content
+            .environment(\.presentSettingsDropdown) { dropdown = $0 }
+            .environment(\.activeSettingsDropdown, dropdown?.id)
+            .overlayPreferenceValue(SettingsDropdownAnchors.self) { anchors in
+                GeometryReader { geometry in
+                    if let dropdown, let anchor = anchors[dropdown.id] {
+                        let bounds = geometry[anchor]
+                        let below = max(0, geometry.size.height - 6 - bounds.maxY)
+                        let above = max(0, bounds.minY - 6)
+                        let showBelow = below >= min(CGFloat(dropdown.titles.count) * 22 + 2, 280) || below >= above
+                        let height = min(CGFloat(dropdown.titles.count) * 22 + 2, showBelow ? below : above)
+                        ZStack(alignment: .topLeading) {
+                            Color.black.opacity(0.001).onTapGesture { self.dropdown = nil }
+                            SettingsDropdownList(request: dropdown, height: height) { self.dropdown = nil }
+                                .frame(width: bounds.width)
+                                .offset(x: bounds.minX, y: showBelow ? bounds.maxY : bounds.minY - height)
+                        }
+                        .id(dropdown.id)
+                    }
+                }
+            }
+
+            .onChange(of: resetID) { dropdown = nil }
+    }
+}
+
+struct SettingsCombo: View {
+    let title: String
+    @Binding var selection: String
+    let options: [String]
+    @State private var id = UUID()
+    @Environment(\.presentSettingsDropdown) private var present
+    @Environment(\.activeSettingsDropdown) private var active
+    @Environment(\.isEnabled) private var enabled
+
+    var body: some View {
+        HStack(spacing: 0) {
+            TextField("", text: $selection).textFieldStyle(.plain)
+                .padding(.horizontal, 6).accessibilityLabel(title)
+            Button {
+                present(SettingsDropdownRequest(id: id, title: title, titles: options,
+                    enabled: Array(repeating: true, count: options.count), selectedIndex: options.firstIndex(of: selection),
+                    select: { selection = options[$0] }))
+            } label: {
+                Image(systemName: "chevron.down").font(.system(size: 9))
+                    .frame(width: 24, height: 26).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).accessibilityLabel(title + "选项")
+            .overlay(alignment: .leading) { Rectangle().fill(Color(white: 0.55)).frame(width: 1) }
+        }
+        .frame(height: 26)
+        .foregroundStyle(enabled ? SettingsStyle.ink : Color(white: 0.65))
+        .background(enabled ? .white : Color(white: 0.95))
+        .overlay { Rectangle().strokeBorder(active == id ? SettingsStyle.gold : Color(white: enabled ? 0.42 : 0.75)) }
+        .anchorPreference(key: SettingsDropdownAnchors.self, value: .bounds) { [id: $0] }
     }
 }

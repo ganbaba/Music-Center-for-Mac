@@ -187,6 +187,13 @@ final class Player {
         start(at: index ?? 0)
     }
 
+    func refreshMetadata(_ tracks: [Track]) {
+        let latest = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        items = items.map { item in
+            Item(track: latest[item.track.id] ?? item.track, playlistEntryID: item.playlistEntryID)
+        }
+    }
+
     func enqueue(_ additions: [Item], placement: QueuePlacement) {
         guard !additions.isEmpty else { return }
         let insertionInQueue: Int
