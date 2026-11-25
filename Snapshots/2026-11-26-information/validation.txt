@@ -1,0 +1,7 @@
+PASS: actual OS/memory, explicit untested network, absent/malformed bundle versions, reference version separation, complete report text.
+PASS: copied complete report including off-screen last section; restored prior clipboard items and types.
+Release final build: BUILD SUCCEEDED.
+Built and installed App: codesign --verify --deep --strict passed; Info.plist 0.1.0 (1).
+GUI: production help routes, normal/compact layouts, top/bottom and arrow scrolling, dark background, Return/Escape/X/OK, stale-copy reset and blocked Ctrl+O passed.
+Installed App: actual product name/version, both routes, version bottom and close passed.
+Unrelated audio, physical devices, backup/restore/conversion and full business regressions not rerun.

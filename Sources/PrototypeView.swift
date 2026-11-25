@@ -60,6 +60,7 @@ struct PrototypeView: View {
     @State private var checkingMissingFiles = false
     @State private var collectionDetailKey: AlbumKey?
     @State private var notice: String?
+    @State private var informationPage: InformationPage?
     @State private var playlistDraftTracks: [Track] = []
     @State private var playlistDetailID: UUID?
     @State private var pendingRestore: URL?
@@ -93,7 +94,7 @@ struct PrototypeView: View {
     private var canSelectTracks: Bool { !showsManagement && !capturedTracks.isEmpty }
     private var canClearTrackSelection: Bool { !showsManagement && !selectedTracks.isEmpty }
     private var menuIsBlocked: Bool {
-        settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
+        informationPage != nil || settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
             || showsImporter || showsPlaylistPrompt || properties != nil || pendingPlaylistDeletion != nil
             || !pendingTrackDeletion.isEmpty || pendingRestore != nil || notice != nil || classificationMessage != nil
             || library.error != nil || player.error != nil || preferences.error != nil
@@ -151,7 +152,7 @@ struct PrototypeView: View {
         .foregroundStyle(ink)
         .background(canvas)
         .environment(\.colorScheme, display.appearance.dark ? .dark : .light)
-        .blur(radius: settingsPage == nil && properties == nil && audioPanel != .equalizer && !showsPlaylistPrompt ? 0 : 3)
+        .blur(radius: informationPage == nil && settingsPage == nil && properties == nil && audioPanel != .equalizer && !showsPlaylistPrompt ? 0 : 3)
         .overlay {
             if let panel = audioPanel, panel != .equalizer {
                 GeometryReader { geometry in
@@ -372,6 +373,7 @@ struct PrototypeView: View {
                 .environment(\.colorScheme, .light)
             }
         }
+        .modifier(InformationPresentation(page: $informationPage))
         .modifier(WindowsMenuHost(isPresented: $showsMenu, resetID: "\(page.rawValue)-\(menuIsBlocked)-\(sampleLibrary)"))
     }
 
@@ -1689,8 +1691,8 @@ struct PrototypeView: View {
         case .backup: saveBackup()
         case .restore: chooseBackup()
         case .settings: settingsPage = .display
-        case .version: notice = "Music Center for Mac · Windows 2.7.4 界面还原"
-        case .system: notice = ProcessInfo.processInfo.operatingSystemVersionString
+        case .version: informationPage = .version
+        case .system: informationPage = .system
         case .missing: searchMissingFiles()
         case .update: notice = "Sony 软件更新服务尚未接入。"
         case .support: NSWorkspace.shared.open(URL(string: "https://www.sony.com/electronics/support/articles/MC4PC020001")!)

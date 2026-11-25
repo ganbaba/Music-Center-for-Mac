@@ -1,5 +1,10 @@
 # Music Center for Mac
 
+## 2026-11-26 系统信息与版本信息快照
+
+“帮助”中的两个入口已改为独立只读窗口，支持完整信息复制、Windows 风格滚动条、紧凑布局和键盘关闭。系统数据来自当前 Mac；版本页读取实际 Mac 版本 **0.1.0（构建 1）**，另标注 Windows 参考版本 2.7.4。范围、14 张验收图与实际验证见 [本轮快照](Snapshots/2026-11-26-information/README.md) 和 [图集](Snapshots/2026-11-26-information/gallery.html)。第四项中的备份、恢复及 ATRAC 向导尚待完成。
+
+
 项目目录：`/Users/luyufeng/Documents/Codex Projects/Music Center for Mac`。应用和工程已统一使用新名称；历史快照保留当时的名称。曲库、设置和缓存的存储标识继续沿用，已有数据可直接读取。
 
 ## 2026-11-25 菜单与确认框精修快照

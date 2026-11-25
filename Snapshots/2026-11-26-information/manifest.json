@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-26",
+  "timezone": "Asia/Hong_Kong",
+  "base_commit": "45b0dd858b7400b545304e3993193556e565af48",
+  "captures": {
+    "mac/01-system-normal.jpg": "b0f1e0c2901b05d843e539ff9f8ff643aad8e2c790df4f215d87243270b08816",
+    "mac/02-system-compact-top.jpg": "32fe181143f5d9ecc29d132c82464300a0c428aa479007f34c904c3252ccc639",
+    "mac/03-system-copied.jpg": "9926e03dfc2cbdf2967a3dbe6fc4a47070b8c4fe044d7e8af3059f8a7ba82726",
+    "mac/04-system-compact-bottom.jpg": "09b37ee0805fb686d9139376387d2d8f79359c78378883e0790dd3c477caf8c3",
+    "mac/05-system-arrow-top.jpg": "d4e481844845221ec752a610b734394f4608924e92955db40a30076f692249a8",
+    "mac/06-version-compact-top.jpg": "ca521bc8707e4c19fe794cd71c9df75590272b804ad8afc32dc796411c495ffa",
+    "mac/07-version-compact-bottom.jpg": "ead49f2a7260e50d63c1be6b677189ce6d2b430ee37bdf00f36005b12264483e",
+    "mac/08-system-dark-background.jpg": "e5e59e86fc72b57f322f8ce783d93a41fc61da9a1c5a25b74604546fb29c63ce",
+    "mac/09-version-dark-background.jpg": "e6daa5b5b801bf99eb971111e0ba8044206323617973a33c106db36a36d95247",
+    "mac/10-version-normal-top.jpg": "00deae6ec71198c8bf23285614d819c87e6315e4c384f3dd9ee968eb8fbd8e9a",
+    "mac/11-version-normal-bottom.jpg": "53466dd74cf6c34821822d69bf4a0b6405f52ed3429adc89dc87c436e2f8385c",
+    "mac/12-installed-system.jpg": "8b295879066e98e48b961b38f6c428c878afa176fe467a81d89aacd1ef105a26",
+    "mac/13-installed-version-top.jpg": "5e28f89ff6e53123d16fbe878913ecdf78e5a07f164dd7aa50e3d06ea736245a",
+    "mac/14-installed-version-bottom.jpg": "87006ff89cd0134f8ae9a330972e6b36404c06b94c28264f91506fe21ba6d2ca"
+  },
+  "production": {
+    "Sources/InformationPanels.swift": "9a256537541c258bdc9282dd895aee2341e3e3901c67291a641ea5e4533ffda1",
+    "Sources/PrototypeView.swift": "7508db75dccdb0bd41827d9f89283543047a3137b7e346244b31bd5cb1a948d0",
+    "MusicCenterForMac.xcodeproj/project.pbxproj": "203b63f084ddb4ebbcb5815a36520fb0358260c64cec252fc0f08f3fa6d0c2e8",
+    "project.yml": "ca0bf223051651d6dd6d24b3fc6e961b5b962feb72c3fc58ea3e0831d8d3e9f7"
+  },
+  "tests": {
+    "Tests/InformationSmoke.swift": "ba192e80a0d5f2ea93a4c88f5b2df24282fa5a78cc60a3a8004acc1b80ea3160",
+    "Tests/InformationQAApp.swift": "b6b4414a4d10963c391a350defa7a7c5c7dddc32be93dcbdaf1dd867f644c112",
+    "Tests/run-information-qa.py": "fc1622908e16187f0b3c27a289d00b79afd337afe6ce8cb0c7ef8b4523b4a971"
+  },
+  "windows_reference": {
+    "Reference-Windows-2026-11-24/capture/06-dialogs/system-information.jpg": "c3fc15f9e59d61ad5b45989da403e788bad897a18cca789d73485432cee72e92",
+    "Reference-Windows-2026-11-24/capture/06-dialogs/system-information-bottom.jpg": "b7868699951def58063b3f4a9f8a1b111c2d5f58c2ca3a1e0707feb81f3a20f9",
+    "Reference-Windows-2026-11-24/capture/06-dialogs/about-version.jpg": "8791cf7da71f607d9ec5ff3a3093db8a2ededef73803eec90cfa85ce17fa2c2d",
+    "Reference-Windows-2026-11-24/capture/06-dialogs/about-version-bottom.jpg": "6a7fe48e5f022fc2a77676e590009573add0460d90c0575c3f91338ac64df4a7"
+  }
+}

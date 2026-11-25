@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1D3A7002026112550000001 /* InformationPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112560000001 /* InformationPanels.swift */; };
 		A1D3A7002026112530000002 /* WindowsDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112540000002 /* WindowsDialog.swift */; };
 		A1D3A7002026112530000001 /* WindowsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112540000001 /* WindowsMenu.swift */; };
 		A1D3A7002026112510000002 /* PropertiesPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112520000002 /* PropertiesPanel.swift */; };
@@ -37,6 +38,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A1D3A7002026112560000001 /* InformationPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InformationPanels.swift; sourceTree = "<group>"; };
 		A1D3A7002026112540000002 /* WindowsDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsDialog.swift; sourceTree = "<group>"; };
 		A1D3A7002026112540000001 /* WindowsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsMenu.swift; sourceTree = "<group>"; };
 		A1D3A7002026112520000002 /* PropertiesPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesPanel.swift; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				A1D3A7002026112500000002 /* SettingsControls.swift */,
 				A1D3A7002026112520000002 /* PropertiesPanel.swift */,
 				A1D3A7002026112540000002 /* WindowsDialog.swift */,
+				A1D3A7002026112560000001 /* InformationPanels.swift */,
 				A1D3A7002026112540000001 /* WindowsMenu.swift */,
 				A1D3A7002026112520000001 /* LibraryProperties.swift */,
 				2BFE03155F660367989C9B50 /* TrackMenu.swift */,
@@ -209,6 +212,7 @@
 				A1D3A7002026112500000001 /* SettingsControls.swift in Sources */,
 				A1D3A7002026112510000002 /* PropertiesPanel.swift in Sources */,
 				A1D3A7002026112530000002 /* WindowsDialog.swift in Sources */,
+				A1D3A7002026112550000001 /* InformationPanels.swift in Sources */,
 				A1D3A7002026112530000001 /* WindowsMenu.swift in Sources */,
 				A1D3A7002026112510000001 /* LibraryProperties.swift in Sources */,
 				80727E0AF47B09D83944A5F2 /* TrackMenu.swift in Sources */,
@@ -242,6 +246,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
 				PRODUCT_NAME = "Music Center for Mac";
+				MARKETING_VERSION = 0.1.0;
+				CURRENT_PROJECT_VERSION = 1;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
@@ -380,6 +386,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
 				PRODUCT_NAME = "Music Center for Mac";
+				MARKETING_VERSION = 0.1.0;
+				CURRENT_PROJECT_VERSION = 1;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
