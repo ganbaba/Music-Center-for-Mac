@@ -1,4 +1,6 @@
-# Music Center for PC 2.7.4 · macOS 界面还原原型
+# Music Center for Mac
+
+项目目录：`/Users/luyufeng/Documents/Codex Projects/Music Center for Mac`。应用和工程已统一使用新名称；历史快照保留当时的名称。曲库、设置和缓存的存储标识继续沿用，已有数据可直接读取。
 
 ## 2026-11-25 菜单与确认框精修快照
 
@@ -22,7 +24,7 @@
 
 Windows 原图与 Mac 验收图分开保存；逐页结果及实际检查见 `Snapshots/2026-11-25-settings/README.md`。
 
-双击 `Build/Music Center UI Preview.app`，或在 Xcode 打开 `MusicCenterUIRecreation.xcodeproj` 并运行 `MusicCenterUIRecreation` scheme。
+双击 `Build/Music Center for Mac.app`，或在 Xcode 打开 `MusicCenterForMac.xcodeproj` 并运行 `MusicCenterForMac` scheme。
 
 `Reference/` 中的八张 PNG 来自 Windows 远程会话中的 2.7.4，版本以 `about.png` 为准。截图为简体中文，保留应用窗口并裁去 Windows 任务栏。参考图以 4096 × 2206 像素保存。曲库主界面见 `songs.png`，未连接设备的传输面板见 `transfer.png`。
 

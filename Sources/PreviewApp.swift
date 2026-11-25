@@ -23,7 +23,7 @@ struct PreviewApp: App {
     @State private var importer: LibraryImport?
 
     var body: some Scene {
-        Window("Music Center UI Preview", id: "preview") {
+        Window("Music Center for Mac", id: "preview") {
             PrototypeView(showsDevice: true, sampleLibrary: $sampleLibrary, sampleDevice: $sampleDevice,
                           library: library, player: player, importer: $importer, preferences: preferences)
         }

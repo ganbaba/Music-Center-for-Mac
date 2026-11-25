@@ -1,9 +1,9 @@
-name: MusicCenterUIRecreation
+name: MusicCenterForMac
 options:
   deploymentTarget:
     macOS: "14.0"
 targets:
-  MusicCenterUIRecreation:
+  MusicCenterForMac:
     type: application
     platform: macOS
     sources:
@@ -12,7 +12,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_NAME: Music Center UI Preview
+        PRODUCT_NAME: Music Center for Mac
         PRODUCT_BUNDLE_IDENTIFIER: local.musiccenter.uirecreation
         GENERATE_INFOPLIST_FILE: YES
         SWIFT_VERSION: "6.0"

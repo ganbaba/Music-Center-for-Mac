@@ -54,7 +54,7 @@
 		1C8CBAC6D483A3CEEA9EBDD0 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		2BFE03155F660367989C9B50 /* TrackMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackMenu.swift; sourceTree = "<group>"; };
 		2F8E8863C602B77B7BB11246 /* Library.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Library.swift; sourceTree = "<group>"; };
-		3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicCenterUIRecreation.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3005359091AFAAF45282A4C3 /* MusicCenterForMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MusicCenterForMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A13E9C97F4B7898F4CEE3BF /* MainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenu.swift; sourceTree = "<group>"; };
 		AFAEAD7CBDF446843FBC0478 /* AudioPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPanels.swift; sourceTree = "<group>"; };
 		B9D326FAD765E5CA8226FDD3 /* SettingsPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreview.swift; sourceTree = "<group>"; };
@@ -71,7 +71,7 @@
 		02EE605858D21B10260FFEC6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */,
+				3005359091AFAAF45282A4C3 /* MusicCenterForMac.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -129,9 +129,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B209617C1C8F2A00B4AB2E85 /* MusicCenterUIRecreation */ = {
+		B209617C1C8F2A00B4AB2E85 /* MusicCenterForMac */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterUIRecreation" */;
+			buildConfigurationList = 1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterForMac" */;
 			buildPhases = (
 				140D93E25F085C43D0892C85 /* Sources */,
 				676D68A18D5C3F2CCD8EF0AC /* Resources */,
@@ -140,11 +140,11 @@
 			);
 			dependencies = (
 			);
-			name = MusicCenterUIRecreation;
+			name = MusicCenterForMac;
 			packageProductDependencies = (
 			);
-			productName = MusicCenterUIRecreation;
-			productReference = 3005359091AFAAF45282A4C3 /* MusicCenterUIRecreation.app */;
+			productName = MusicCenterForMac;
+			productReference = 3005359091AFAAF45282A4C3 /* MusicCenterForMac.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -161,7 +161,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterUIRecreation" */;
+			buildConfigurationList = 020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterForMac" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -175,7 +175,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B209617C1C8F2A00B4AB2E85 /* MusicCenterUIRecreation */,
+				B209617C1C8F2A00B4AB2E85 /* MusicCenterForMac */,
 			);
 		};
 /* End PBXProject section */
@@ -241,7 +241,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
-				PRODUCT_NAME = "Music Center UI Preview";
+				PRODUCT_NAME = "Music Center for Mac";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
@@ -379,7 +379,7 @@
 					"@executable_path/../Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = local.musiccenter.uirecreation;
-				PRODUCT_NAME = "Music Center UI Preview";
+				PRODUCT_NAME = "Music Center for Mac";
 				SDKROOT = macosx;
 				SWIFT_VERSION = 6.0;
 			};
@@ -388,7 +388,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterUIRecreation" */ = {
+		020E0A8D38E5AAD38D191080 /* Build configuration list for PBXProject "MusicCenterForMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				37DBE5DF01ECB1B13F85D381 /* Debug */,
@@ -397,7 +397,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterUIRecreation" */ = {
+		1C13CA511078477A35DCDC39 /* Build configuration list for PBXNativeTarget "MusicCenterForMac" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D7CC2F43560117FE6F00D94B /* Debug */,

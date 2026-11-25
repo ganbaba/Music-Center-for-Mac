@@ -1689,7 +1689,7 @@ struct PrototypeView: View {
         case .backup: saveBackup()
         case .restore: chooseBackup()
         case .settings: settingsPage = .display
-        case .version: notice = "Music Center UI Preview · Windows 2.7.4 界面还原"
+        case .version: notice = "Music Center for Mac · Windows 2.7.4 界面还原"
         case .system: notice = ProcessInfo.processInfo.operatingSystemVersionString
         case .missing: searchMissingFiles()
         case .update: notice = "Sony 软件更新服务尚未接入。"

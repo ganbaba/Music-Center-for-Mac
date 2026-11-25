@@ -1,0 +1,7 @@
+Release at renamed path: BUILD SUCCEEDED.
+Built and installed App: codesign --verify --deep --strict passed.
+Info.plist: CFBundleName and executable Music Center for Mac; existing bundle ID retained.
+All three QA builders: Python syntax, project/scheme references, and two product-name replacements verified.
+pbxproj plutil -lint and git diff --check passed.
+Business smoke, GUI, audio, and hardware tests were not rerun for this naming-only change.
+Chorotheia restore readable; ownership at renamed path not verified (known tool limitation).
