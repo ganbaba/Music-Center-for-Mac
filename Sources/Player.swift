@@ -6,6 +6,7 @@ import Observation
 @Observable
 final class Player {
     struct Item {
+        var queueID = UUID()
         let track: Track
         var playlistEntryID: UUID? = nil
         var id: UUID { playlistEntryID ?? track.id }
@@ -42,7 +43,8 @@ final class Player {
     private var items: [Item] = []
     private var order: [Int] = []
 
-    var queue: [Track] { order.map { items[$0].track } }
+    var queueEntries: [Item] { order.map { items[$0] } }
+    var queue: [Track] { queueEntries.map(\.track) }
     var hasQueue: Bool { !order.isEmpty }
     private(set) var index: Int?
     private(set) var isPlaying = false
@@ -181,7 +183,7 @@ final class Player {
 
     func play(_ items: [Item], from id: UUID? = nil) {
         guard !items.isEmpty else { return }
-        self.items = items
+        self.items = items.map { Item(track: $0.track, playlistEntryID: $0.playlistEntryID) }
         let startPosition = id.flatMap { id in items.firstIndex { $0.id == id } }
         rebuildOrder(keeping: startPosition)
         start(at: index ?? 0)
@@ -190,7 +192,7 @@ final class Player {
     func refreshMetadata(_ tracks: [Track]) {
         let latest = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
         items = items.map { item in
-            Item(track: latest[item.track.id] ?? item.track, playlistEntryID: item.playlistEntryID)
+            Item(queueID: item.queueID, track: latest[item.track.id] ?? item.track, playlistEntryID: item.playlistEntryID)
         }
     }
 
@@ -206,9 +208,26 @@ final class Player {
             insertionInQueue = order.count
             insertionInSource = items.count
         }
-        items.insert(contentsOf: additions, at: insertionInSource)
+        items.insert(contentsOf: additions.map { Item(track: $0.track, playlistEntryID: $0.playlistEntryID) }, at: insertionInSource)
         order = order.map { $0 < insertionInSource ? $0 : $0 + additions.count }
         order.insert(contentsOf: insertionInSource..<(insertionInSource + additions.count), at: insertionInQueue)
+    }
+
+    func jump(toQueueEntry id: UUID) {
+        guard let position = order.firstIndex(where: { items[$0].queueID == id }) else { return }
+        jump(to: position)
+    }
+
+    func removeQueueEntry(_ id: UUID) {
+        guard let source = items.firstIndex(where: { $0.queueID == id }), let position = order.firstIndex(of: source) else { return }
+        let previous = index
+        let wasPlaying = isPlaying
+        items.remove(at: source)
+        order.remove(at: position)
+        order = order.map { $0 > source ? $0 - 1 : $0 }
+        guard !order.isEmpty else { clearQueue(); return }
+        if previous == position { start(at: min(position, order.count - 1), playing: wasPlaying) }
+        else if let previous { index = previous - (position < previous ? 1 : 0) }
     }
 
     func jump(to index: Int) {

@@ -55,6 +55,10 @@ struct PrototypeView: View {
     @State private var audioPanel: AudioPanel?
     @Binding private var dsee: Bool
     @Binding private var equalizer: EqualizerSettings
+    @State private var classificationMessage: String?
+    @State private var missingTrackIDs: Set<UUID> = []
+    @State private var checkingMissingFiles = false
+    @State private var collectionDetailKey: AlbumKey?
     @State private var notice: String?
     @State private var playlistDraftTracks: [Track] = []
     @State private var playlistDetailID: UUID?
@@ -91,7 +95,8 @@ struct PrototypeView: View {
     private var menuIsBlocked: Bool {
         settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
             || showsImporter || showsPlaylistPrompt || properties != nil || pendingPlaylistDeletion != nil
-            || !pendingTrackDeletion.isEmpty
+            || !pendingTrackDeletion.isEmpty || pendingRestore != nil || notice != nil || classificationMessage != nil
+            || library.error != nil || player.error != nil || preferences.error != nil
     }
 
     private var canPlay: Bool { player.hasQueue || capturedTracks.contains { $0.localTrack != nil } }
@@ -148,22 +153,6 @@ struct PrototypeView: View {
         .environment(\.colorScheme, display.appearance.dark ? .dark : .light)
         .blur(radius: settingsPage == nil && properties == nil && audioPanel != .equalizer && !showsPlaylistPrompt ? 0 : 3)
         .overlay {
-            if showsMenu {
-                ZStack(alignment: .topLeading) {
-                    Color.clear.contentShape(Rectangle()).onTapGesture { showsMenu = false }
-                    MainMenu(display: $settings.display, perform: performMenuAction, repeatMode: player.repeatMode,
-                             isMuted: player.isMuted, isShuffled: player.isShuffled, canPlay: canPlay, canStop: player.current != nil, canGoNext: player.canGoNext,
-                             canGoPrevious: player.canGoPrevious, canEject: audioDisc != nil, canLookupCD: !discTracks.isEmpty,
-                             canImport: !library.importing,
-                             changeRepeat: { player.repeatMode = $0 }, dismiss: { showsMenu = false })
-                        .foregroundStyle(Color(white: 0.08))
-                        .environment(\.colorScheme, .light)
-                        .padding(.leading, 43)
-                        .padding(.top, 16)
-                }
-            }
-        }
-        .overlay {
             if let panel = audioPanel, panel != .equalizer {
                 GeometryReader { geometry in
                     ZStack(alignment: .topTrailing) {
@@ -198,17 +187,25 @@ struct PrototypeView: View {
         }
         .background {
             Group {
-                shortcut("新建播放列表…", "n", modifiers: .command)
-                shortcut("全选", "a", modifiers: .command, enabled: canSelectTracks && !searchFocused)
-                shortcut("取消全选", "a", modifiers: [.command, .shift], enabled: canClearTrackSelection && !searchFocused)
-                shortcut("更新至最新信息", KeyEquivalent(Character(UnicodeScalar(NSF5FunctionKey)!)))
-                shortcut("播放/暂停", KeyEquivalent(Character(UnicodeScalar(NSF6FunctionKey)!)), enabled: canPlay)
-                shortcut("停止", KeyEquivalent(Character(UnicodeScalar(NSF7FunctionKey)!)), enabled: player.current != nil)
-                shortcut("静音", KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!)))
-                shortcut("降低音量", KeyEquivalent(Character(UnicodeScalar(NSF9FunctionKey)!)))
-                shortcut("提高音量", KeyEquivalent(Character(UnicodeScalar(NSF10FunctionKey)!)))
-                shortcut("上一首", .leftArrow, modifiers: .control, enabled: player.canGoPrevious)
-                shortcut("下一首", .rightArrow, modifiers: .control, enabled: player.canGoNext)
+                shortcut(.newPlaylist, "n", modifiers: .command)
+                shortcut(.newPlaylist, "n", modifiers: .control)
+                shortcut(.importFiles, "o", modifiers: .control)
+                shortcut(.selectAll, "a", modifiers: .control, enabled: canSelectTracks && !searchFocused)
+                shortcut(.deselectAll, "a", modifiers: [.control, .shift], enabled: canClearTrackSelection && !searchFocused)
+                shortcut(.eject, "e", modifiers: .control, enabled: audioDisc != nil)
+                shortcut(.lookupCD, "i", modifiers: .control, enabled: !discTracks.isEmpty)
+                shortcut(.support, KeyEquivalent(Character(UnicodeScalar(NSF1FunctionKey)!)))
+                shortcut(.quit, KeyEquivalent(Character(UnicodeScalar(NSF4FunctionKey)!)), modifiers: .option)
+                shortcut(.selectAll, "a", modifiers: .command, enabled: canSelectTracks && !searchFocused)
+                shortcut(.deselectAll, "a", modifiers: [.command, .shift], enabled: canClearTrackSelection && !searchFocused)
+                shortcut(.refresh, KeyEquivalent(Character(UnicodeScalar(NSF5FunctionKey)!)))
+                shortcut(.playPause, KeyEquivalent(Character(UnicodeScalar(NSF6FunctionKey)!)), enabled: canPlay)
+                shortcut(.stop, KeyEquivalent(Character(UnicodeScalar(NSF7FunctionKey)!)), enabled: player.current != nil)
+                shortcut(.mute, KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!)))
+                shortcut(.volumeDown, KeyEquivalent(Character(UnicodeScalar(NSF9FunctionKey)!)))
+                shortcut(.volumeUp, KeyEquivalent(Character(UnicodeScalar(NSF10FunctionKey)!)))
+                shortcut(.previous, .leftArrow, modifiers: .control, enabled: player.canGoPrevious)
+                shortcut(.next, .rightArrow, modifiers: .control, enabled: player.canGoNext)
             }
             .opacity(0)
             .accessibilityHidden(true)
@@ -216,9 +213,9 @@ struct PrototypeView: View {
             .disabled(menuIsBlocked)
         }
         .onExitCommand { audioPanel = nil; showsMenu = false }
-        .alert("Music Center UI Preview", isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } })) {
-            Button("确定") { notice = nil }
-        } message: { Text(notice ?? "") }
+        .windowsAlert(isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }), message: notice ?? "")
+        .windowsAlert(isPresented: Binding(get: { classificationMessage != nil }, set: { if !$0 { classificationMessage = nil } }),
+            message: classificationMessage ?? "", buttons: [WindowsDialogButton("close", "关闭(C)")], defaultButton: "close", cancelButton: "close")
         .overlay {
             if let settingsPage {
                 GeometryReader { geometry in
@@ -338,53 +335,34 @@ struct PrototypeView: View {
                       allowsMultipleSelection: importer == .files, onCompletion: finishImport) {
             importer = nil
         }
-        .alert("操作失败", isPresented: Binding(
+        .windowsAlert(isPresented: Binding(
             get: { library.error != nil || player.error != nil || preferences.error != nil },
             set: { if !$0 { library.error = nil; player.error = nil; preferences.error = nil } }
-        )) {
-            Button("确定") { library.error = nil; player.error = nil; preferences.error = nil }
-        } message: {
-            Text(library.error ?? player.error ?? preferences.error ?? "")
-        }
-        .alert("恢复备份？", isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } }),
-               presenting: pendingRestore) { url in
-            Button("取消", role: .cancel) {}
-            Button("恢复", role: .destructive) {
+        ), message: library.error ?? player.error ?? preferences.error ?? "", symbol: .error)
+        .windowsAlert(isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } }),
+            message: "用「\(pendingRestore?.lastPathComponent ?? "")」中的曲库、播放历史和设置替换当前数据。恢复前会保存一份当前备份。",
+            symbol: .warning, width: 392, buttons: [WindowsDialogButton("yes", "恢复") {
+                guard let url = pendingRestore else { return }
                 do {
                     let previous = try library.restore(from: url, preferences: preferences)
                     player.clearQueue()
                     player.setInitialAudio(outputUID: settings.outputDeviceUID, equalizer: equalizer, renderingRate: settings.outputSampleRate)
-                    refreshAudioDisc()
-                    sampleLibrary = false
-                    selectPage(.songs)
+                    refreshAudioDisc(); sampleLibrary = false; selectPage(.songs)
                     notice = "已恢复曲库和设置。恢复前的备份位于「\(previous.path)」。"
                 } catch { notice = "无法恢复备份。\(error.localizedDescription)" }
-            }
-        } message: { url in
-            Text("用「\(url.lastPathComponent)」中的曲库、播放历史和设置替换当前数据。恢复前会保存一份当前备份。")
-        }
-        .alert("从我的音乐库删除？", isPresented: Binding(
-            get: { !pendingTrackDeletion.isEmpty },
-            set: { if !$0 { pendingTrackDeletion = [] } }
-        ), presenting: pendingTrackDeletion) { tracks in
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
-                if library.removeFromLibrary(tracks) { trackSelection.subtract(tracks) }
-            }
-        } message: { tracks in
-            Text("将从曲库和播放列表中移除 \(tracks.count) 首歌曲。原音频文件保留在磁盘上。")
-        }
-        .alert("删除播放列表？", isPresented: Binding(
-            get: { pendingPlaylistDeletion != nil },
-            set: { if !$0 { pendingPlaylistDeletion = nil } }
-        ), presenting: pendingPlaylistDeletion) { playlist in
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
+            }, WindowsDialogButton("no", "取消")], defaultButton: "no", cancelButton: "no")
+        .windowsAlert(isPresented: Binding(get: { !pendingTrackDeletion.isEmpty }, set: { if !$0 { pendingTrackDeletion = [] } }),
+            message: "将从我的音乐库删除所选项目。\n\(pendingTrackDeletion.count)歌曲", symbol: .warning, width: 392,
+            buttons: [WindowsDialogButton("yes", "是") {
+                if library.removeFromLibrary(pendingTrackDeletion) { trackSelection.subtract(pendingTrackDeletion) }
+            }, WindowsDialogButton("no", "否")], defaultButton: "no", cancelButton: "no",
+            option: WindowsDialogOption(title: "同时删除计算机中的文件", help: "本轮仅从曲库移除，原音频文件保留。"))
+        .windowsAlert(isPresented: Binding(get: { pendingPlaylistDeletion != nil }, set: { if !$0 { pendingPlaylistDeletion = nil } }),
+            message: "删除所选项目。", symbol: .warning, width: 356,
+            buttons: [WindowsDialogButton("yes", "是") {
+                guard let playlist = pendingPlaylistDeletion else { return }
                 if library.deletePlaylist(playlist.id), playlistDetailID == playlist.id { openPlaylist(nil) }
-            }
-        } message: { playlist in
-            Text("删除「\(playlist.name)」。歌曲仍保存在曲库中。")
-        }
+            }, WindowsDialogButton("no", "否")], defaultButton: "no", cancelButton: "no")
         .overlay {
             if showsPlaylistPrompt {
                 ZStack {
@@ -394,6 +372,7 @@ struct PrototypeView: View {
                 .environment(\.colorScheme, .light)
             }
         }
+        .modifier(WindowsMenuHost(isPresented: $showsMenu, resetID: "\(page.rawValue)-\(menuIsBlocked)-\(sampleLibrary)"))
     }
 
     private func openPlaylistPrompt(tracks: [Track] = []) {
@@ -469,16 +448,10 @@ struct PrototypeView: View {
                     }
                     .frame(width: 18, height: 18)
                     .padding(.horizontal, 7)
-                    Button {
-                        audioPanel = nil
-                        showsMenu.toggle()
-                    } label: {
-                        Image(systemName: "line.3.horizontal")
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("主菜单")
-                    .help("菜单")
+                    WindowsMenuButton(title: "主菜单", width: 77, point: CGPoint(x: 11, y: 16),
+                        willOpen: { audioPanel = nil }, entries: { mainMenuEntries }) {
+                        Image(systemName: "line.3.horizontal").frame(width: 32, height: 32)
+                    }.help("菜单")
                 }
             }
             .frame(height: 32)
@@ -748,6 +721,8 @@ struct PrototypeView: View {
         withAnimation(display.visualEffects ? .easeInOut(duration: 0.15) : nil) {
             page = item
             playlistDetailID = nil
+            collectionDetailKey = nil
+            showsMenu = false
             showsManagement = false
             managedDevice = nil
             search = ""
@@ -755,7 +730,14 @@ struct PrototypeView: View {
         }
     }
 
+    private var collectionDetail: TrackCollection? {
+        guard page.isCollection, let key = collectionDetailKey else { return nil }
+        return TrackCollection.group(sampleLibrary ? CapturedLibrary.tracks : localRows, by: page,
+            groupArtistsByTrack: display.groupArtistsByTrack).first { $0.id == key }
+    }
+
     private var capturedTracks: [CapturedTrack] {
+        if let group = collectionDetail { return group.tracks.filter { $0.matches(search) } }
         if page == .playlists, let playlistDetail {
             return playlistDetail.tracks.filter { $0.matches(search) }
         }
@@ -798,6 +780,8 @@ struct PrototypeView: View {
                         .task(id: audioDisc) { await loadAudioDisc(audioDisc) }
                         .id(audioDisc.root)
                         .frame(width: bodyWidth, height: geometry.size.height)
+                } else if let detail = collectionDetail {
+                    collectionDetailView(detail).frame(width: bodyWidth, height: geometry.size.height, alignment: .topLeading)
                 } else if page == .playlists, let detail = playlistDetail {
                     playlistDetailView(detail)
                         .frame(width: bodyWidth, height: geometry.size.height, alignment: .topLeading)
@@ -874,7 +858,7 @@ struct PrototypeView: View {
 
     private var filters: some View {
         HStack(spacing: 0) {
-            if page.hasViewModes && playlistDetail == nil {
+            if page.hasViewModes && playlistDetail == nil && collectionDetail == nil {
                 viewModeButton("square.grid.2x2.fill", grid: true)
                 viewModeButton("line.3.horizontal", grid: false)
             }
@@ -982,20 +966,9 @@ struct PrototypeView: View {
                         }
                         .buttonStyle(.bordered)
                         .disabled(group.tracks.isEmpty)
-                        Menu {
-                            Button("播放下一曲") { enqueue(group.tracks, placement: .next) }.disabled(group.tracks.isEmpty)
-                            Button("添加到播放队列") { enqueue(group.tracks, placement: .end) }.disabled(group.tracks.isEmpty)
-                            Divider()
-                            Button("删除播放列表", role: .destructive) { pendingPlaylistDeletion = group.playlist }
-                            Divider()
-                            Button("属性") { properties = PropertiesRequest(subjects: [.playlist(group)]) }
-                        } label: {
+                        WindowsMenuButton(title: "播放列表更多操作", width: 184, entries: { playlistDetailMenu(group) }) {
                             Image(systemName: "ellipsis").frame(width: 25, height: 24)
                         }
-                        .menuStyle(.borderlessButton)
-                        .menuIndicator(.hidden)
-                        .fixedSize()
-                        .accessibilityLabel("播放列表更多操作")
                     }
                 }
                 .frame(height: 169)
@@ -1019,7 +992,14 @@ struct PrototypeView: View {
                       onProperties: openSongProperties,
                       onCollectionProperties: openCollectionProperties,
                       onPlaylistProperties: { properties = PropertiesRequest(subjects: [.playlist($0)]) },
-                      propertyRecords: library.propertyRecords, connected: sampleDevice, playlists: library.playlists,
+                      propertyRecords: library.propertyRecords,
+                      onOpenCollection: { group, page in selectPage(page); collectionDetailKey = group.id },
+                      onClassify: { rows in
+                          classificationMessage = rows.allSatisfy { $0.localTrack?.format == "MP3" } ? "MP3分类编辑器尚未接入。" : "指定歌曲无法分类。\n仅MP3格式的歌曲可以分类。"
+                      },
+                      onUnknownProperties: { _ in notice = "Gracenote 音乐识别服务尚未接入。" },
+                      onColumnSettings: { settingsPage = .columns },
+                      onRestoreColumnOrder: restoreColumnOrder, missingTrackIDs: missingTrackIDs, connected: sampleDevice, playlists: library.playlists,
                       playlistGroups: playlistGroups, showsDisplayPositions: playlistID != nil || page.isHistory, playlistID: playlistID,
                       allowsReordering: playlistID != nil && search.isEmpty,
                       reorderPlaylist: { library.reorderPlaylist($0, replacing: $1, in: $2) },
@@ -1033,7 +1013,6 @@ struct PrototypeView: View {
                       play: sampleLibrary && page != .playlists ? nil : { play($0, from: $1) },
                       enqueue: enqueue,
                       exportTracks: exportTracks,
-                      lookupAlbum: { albumLookup = .init(title: $0.album) },
                       columnWidths: $settings.columnWidths,
                       rowHeight: display.spacing.rowHeight * textScale, textScale: textScale,
                       selectedRowColor: display.appearance.selectedTrack,
@@ -1439,8 +1418,8 @@ struct PrototypeView: View {
         .help(panel.rawValue)
     }
 
-    private func shortcut(_ action: String, _ key: KeyEquivalent, modifiers: EventModifiers = [], enabled: Bool = true) -> some View {
-        Button(action) { performMenuAction(action) }
+    private func shortcut(_ action: MainMenuCommand, _ key: KeyEquivalent, modifiers: EventModifiers = [], enabled: Bool = true) -> some View {
+        Button(action.rawValue) { performMenuAction(action) }
             .keyboardShortcut(key, modifiers: modifiers)
             .disabled(!enabled)
     }
@@ -1593,44 +1572,128 @@ struct PrototypeView: View {
         }
     }
 
-    private func performMenuAction(_ action: String) {
+    private var mainMenuEntries: [WindowsMenuEntry] {
+        MainMenuCatalog.entries(display: $settings.display, repeatMode: player.repeatMode, isMuted: player.isMuted, isShuffled: player.isShuffled,
+            capabilities: MainMenuCapabilities(canPlay: canPlay, canStop: player.current != nil, canGoNext: player.canGoNext,
+                canGoPrevious: player.canGoPrevious, canEject: audioDisc != nil, canLookupCD: !discTracks.isEmpty,
+                canImport: !library.importing, canSelect: canSelectTracks, canDeselect: canClearTrackSelection, canSearch: !checkingMissingFiles),
+            perform: performMenuAction, changeRepeat: { player.repeatMode = $0 })
+    }
+
+    private func restoreColumnOrder() {
+        let preferred = PreviewSettings.defaultColumns + PreviewSettings.extraColumns
+        settings.columns = preferred.filter { settings.columns.contains($0) } + settings.columns.filter { !preferred.contains($0) }
+    }
+
+    private func playlistDetailMenu(_ group: PlaylistGroup) -> [WindowsMenuEntry] {
+        TrackMenuCatalog.entries(kind: .playlistDetail, playlists: library.playlists,
+            capabilities: TrackMenuCapabilities(play: !group.tracks.isEmpty, queue: !group.tracks.isEmpty, remove: true)) { command in
+            switch command {
+            case .play: playPlaylist(group)
+            case .next: enqueue(group.tracks, placement: .next)
+            case .queue: enqueue(group.tracks, placement: .end)
+            case .newPlaylist: openPlaylistPrompt(tracks: group.tracks.compactMap(\.localTrack))
+            case .addToPlaylist(let id): library.add(group.tracks.compactMap(\.localTrack), to: id)
+            case .remove: pendingPlaylistDeletion = group.playlist
+            case .properties: properties = PropertiesRequest(subjects: [.playlist(group)])
+            default: break
+            }
+        }
+    }
+
+    private func collectionDetailView(_ group: TrackCollection) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button { collectionDetailKey = nil; search = ""; trackSelection = [] } label: {
+                Image(systemName: "chevron.left").frame(width: 30, height: 30)
+            }.buttonStyle(.plain).accessibilityLabel("返回\(page.rawValue)")
+            HStack(alignment: .top, spacing: 22) {
+                CapturedCover(artwork: page == .artists && library.propertyRecords[.artist(group.key.title)]?.overridesArtwork == true ? library.propertyRecords[.artist(group.key.title)]?.artwork : group.tracks.first?.localTrack?.artwork,
+                    reference: sampleLibrary).frame(width: 158, height: 169)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(group.key.title).font(.system(size: 30 * textScale)).lineLimit(2)
+                    if page != .artists { Text(group.key.artist).font(.system(size: 12)).lineLimit(1) }
+                    Text("\(group.tracks.count)歌曲, \(previewTime(group.tracks.reduce(0) { $0 + $1.seconds }))").font(.system(size: 11)).foregroundStyle(muted)
+                    Spacer()
+                    WindowsMenuButton(title: "\(page.rawValue)更多操作", width: 176, entries: {
+                        TrackMenuCatalog.entries(kind: page == .artists ? .artist : .album, playlists: library.playlists,
+                            capabilities: TrackMenuCapabilities(play: !sampleLibrary, queue: !sampleLibrary, remove: !sampleLibrary), showsDestination: false) { command in
+                            switch command {
+                            case .play: if let first = group.tracks.first { play(group.tracks, from: first) }
+                            case .next: enqueue(group.tracks, placement: .next)
+                            case .queue: enqueue(group.tracks, placement: .end)
+                            case .newPlaylist: openPlaylistPrompt(tracks: group.tracks.compactMap(\.localTrack))
+                            case .addToPlaylist(let id): library.add(group.tracks.compactMap(\.localTrack), to: id)
+                            case .unknownProperties: notice = "Gracenote 音乐识别服务尚未接入。"
+                            case .searchAlbum: search = group.key.title
+                            case .remove: pendingTrackDeletion = Set(group.tracks.compactMap { $0.localTrack?.id })
+                            case .properties: properties = PropertiesRequest(subjects: [.collection(group, artist: page == .artists, byTrack: display.groupArtistsByTrack)])
+                            default: break
+                            }
+                        }
+                    }) { Image(systemName: "ellipsis").frame(width: 25, height: 24) }
+                }.frame(height: 169)
+            }
+            trackTable(group.tracks.filter { $0.matches(search) }, columns: ["#"] + settings.columns).id(group.id)
+        }.padding(.leading, 28).padding(.trailing, 16).padding(.top, 8)
+    }
+
+    private func searchMissingFiles() {
+        guard !checkingMissingFiles else { return }
+        checkingMissingFiles = true
+        let tracks = library.tracks
+        Task {
+            let report = await MissingTrackReport.scan(tracks)
+            missingTrackIDs = report.missing.intersection(Set(library.tracks.map(\.id)))
+            checkingMissingFiles = false
+            if report.unreadable.isEmpty {
+                notice = missingTrackIDs.isEmpty ? "搜索完成。\n一个图标已显示在无文件歌曲的歌曲列表信息项目中。" : "搜索完成。\n已在\(missingTrackIDs.count)首无文件歌曲的信息栏中显示图标。"
+            } else {
+                notice = "搜索完成。\n找不到\(missingTrackIDs.count)首歌曲的文件；另有\(report.unreadable.count)首无法读取，未将其判为缺失。"
+            }
+        }
+    }
+
+    private func performMenuAction(_ action: MainMenuCommand) {
         showsMenu = false
         switch action {
-        case "新建播放列表…": openPlaylistPrompt()
-        case "导入文件…": requestImport(.files)
-        case "导入文件夹…": requestImport(.folder)
-        case "导入播放列表…": requestImport(.playlist)
-        case "退出": NSApp.terminate(nil)
-        case "全选":
+        case .newPlaylist: openPlaylistPrompt()
+        case .importFiles: requestImport(.files)
+        case .importFolder: requestImport(.folder)
+        case .importPlaylist: requestImport(.playlist)
+        case .quit: NSApp.terminate(nil)
+        case .selectAll:
             if canSelectTracks {
                 searchFocused = false
                 trackSelection = Set(capturedTracks.map(\.id))
             }
-        case "取消全选":
+        case .deselectAll:
             if canClearTrackSelection {
                 searchFocused = false
                 trackSelection = []
             }
-        case "更新至最新信息":
+        case .refresh:
+            missingTrackIDs = []
             library.refresh()
             refreshMountedMedia()
-        case "播放/暂停": togglePlayback()
-        case "停止": player.stop()
-        case "上一首": player.previous()
-        case "下一首": player.next()
-        case "随机播放": player.toggleShuffle()
-        case "提高音量": player.setVolume(player.volume + 0.05)
-        case "降低音量": player.setVolume(player.volume - 0.05)
-        case "静音": player.toggleMute()
-        case "弹出光盘": ejectAudioDisc()
-        case "获取CD信息": showDiscLookup()
-        case "批量转化ATRAC": chooseATRAC()
-        case "数据备份": saveBackup()
-        case "恢复备份数据": chooseBackup()
-        case "设置": settingsPage = .display
-        case "版本信息": notice = "Music Center UI Preview · Windows 2.7.4 界面还原"
-        case "系统信息": notice = ProcessInfo.processInfo.operatingSystemVersionString
-        default: notice = "「\(action)」目前为界面预览。"
+        case .playPause: togglePlayback()
+        case .stop: player.stop()
+        case .previous: player.previous()
+        case .next: player.next()
+        case .shuffle: player.toggleShuffle()
+        case .volumeUp: player.setVolume(player.volume + 0.05)
+        case .volumeDown: player.setVolume(player.volume - 0.05)
+        case .mute: player.toggleMute()
+        case .eject: ejectAudioDisc()
+        case .lookupCD: showDiscLookup()
+        case .atrac: chooseATRAC()
+        case .backup: saveBackup()
+        case .restore: chooseBackup()
+        case .settings: settingsPage = .display
+        case .version: notice = "Music Center UI Preview · Windows 2.7.4 界面还原"
+        case .system: notice = ProcessInfo.processInfo.operatingSystemVersionString
+        case .missing: searchMissingFiles()
+        case .update: notice = "Sony 软件更新服务尚未接入。"
+        case .support: NSWorkspace.shared.open(URL(string: "https://www.sony.com/electronics/support/articles/MC4PC020001")!)
         }
     }
 

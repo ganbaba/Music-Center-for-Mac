@@ -1,0 +1,7 @@
+PASS: menu keyboard/disabled/separator/parent navigation, compact-edge positioning, long menus, capability states, playlist identity dispatch, actual missing files, duplicate queue ownership/shuffle/removal/stale actions.
+Audio engine available for silent paused-queue checks: true
+PASS: properties persistence, drafts, bulk, album/artist membership, playlist duplicates, atomic rollback, backup/legacy/corrupt restore, stale entities, actual file facts, Vorbis fields, source merge, queue metadata refresh, original audio SHA256.
+Settings preferences smoke returned successfully in Menus QA startup.
+Release build: BUILD SUCCEEDED.
+Built and installed App: codesign --verify --deep --strict passed.
+GUI: menu keyboard selection, Escape, No cancellation, compact layout, long submenu scrolling, property validation and installed-app entries passed.

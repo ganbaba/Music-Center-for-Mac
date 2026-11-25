@@ -186,6 +186,12 @@ struct CapturedTable: View {
     var onCollectionProperties: (TrackCollection, LibraryPage) -> Void = { _, _ in }
     var onPlaylistProperties: (PlaylistGroup) -> Void = { _ in }
     var propertyRecords: [PropertyKey: PropertyRecord] = [:]
+    var onOpenCollection: (TrackCollection, LibraryPage) -> Void = { _, _ in }
+    var onClassify: ([CapturedTrack]) -> Void = { _ in }
+    var onUnknownProperties: ([CapturedTrack]) -> Void = { _ in }
+    var onColumnSettings: () -> Void = {}
+    var onRestoreColumnOrder: () -> Void = {}
+    var missingTrackIDs: Set<UUID> = []
     var connected: Bool
     var playlists: [Playlist] = []
     var playlistGroups: [PlaylistGroup]? = nil
@@ -205,7 +211,6 @@ struct CapturedTable: View {
     var enqueue: (([CapturedTrack], Player.QueuePlacement) -> Void)?
 
     var exportTracks: (([Track], AudioExportFormat) -> Void)?
-    var lookupAlbum: ((CapturedTrack) -> Void)?
 
     @Binding var columnWidths: [String: Double]
     var rowHeight: CGFloat = 40
@@ -214,7 +219,6 @@ struct CapturedTable: View {
     var groupArtistsByTrack = false
     var onNewPlaylist: ([Track]) -> Void = { _ in }
     @State private var resizing: (column: String, width: CGFloat, currentWidth: CGFloat)?
-    @State private var menu: (track: CapturedTrack, order: [CapturedTrack], playlistID: UUID?, point: CGPoint)?
     @State private var draggedTrack: UUID?
     @State private var dropTarget: UUID?
     @State private var selectedPlaylist: UUID?
@@ -296,79 +300,37 @@ struct CapturedTable: View {
             }
             .scrollIndicators(.automatic)
             .coordinateSpace(name: "track-table")
-            .overlay(alignment: .topLeading) {
-                if let menu {
-                    menuOverlay(menu.track, order: menu.order, playlistID: menu.playlistID, at: menu.point, in: geometry.size)
-                }
-            }
         }
-        .onChange(of: isGrid) { expanded = []; expandedPlaylists = []; menu = nil }
-        .onChange(of: tracks.map(\.id)) { menu = nil }
+        .onChange(of: isGrid) { expanded = []; expandedPlaylists = [] }
         .onChange(of: columns) {
             if let sortColumn, !columns.contains(sortColumn) { self.sortColumn = nil }
         }
-        .onExitCommand { menu = nil }
     }
 
-    private func menuOverlay(_ track: CapturedTrack, order: [CapturedTrack], playlistID: UUID?, at point: CGPoint, in size: CGSize) -> some View {
-        let canTransfer = connected && !isDevice
-        let height: CGFloat = canTransfer ? 277 : 255
-        let x = max(0, min(point.x, size.width - TrackMenu.width))
-        let y = max(0, min(point.y, size.height - height))
-        let left = x >= TrackMenu.submenuWidth && x + TrackMenu.width + TrackMenu.submenuWidth > size.width
+    private func songMenu(_ track: CapturedTrack, order: [CapturedTrack], playlistID: UUID?) -> [WindowsMenuEntry] {
         let selected = order.filter { selection.contains($0.id) }
         let targets = selected.compactMap(\.localTrack)
-        let remove: (() -> Void)?
-        if let playlistID {
-            remove = {
-                menu = nil
-                removeFromPlaylist(selected.compactMap(\.playlistEntryID), playlistID)
+        let canRemove = playlistID != nil || (!targets.isEmpty && removeFromLibrary != nil)
+        return TrackMenuCatalog.entries(kind: playlistID == nil ? .song : .playlistSong, playlists: targets.isEmpty ? [] : playlists,
+            capabilities: TrackMenuCapabilities(play: play != nil, queue: !targets.isEmpty && enqueue != nil,
+                edit: !targets.isEmpty && exportTracks != nil, remove: canRemove, transfer: connected && !isDevice)) { command in
+            switch command {
+            case .play: play?(order, track)
+            case .next: enqueue?(selected, .next)
+            case .queue: enqueue?(selected, .end)
+            case .newPlaylist: onNewPlaylist(targets)
+            case .addToPlaylist(let id): addToPlaylist(targets, id)
+            case .classify: onClassify(selected)
+            case .exportWav: exportTracks?(targets, .wav)
+            case .exportFlac: exportTracks?(targets, .flac)
+            case .unknownProperties: onUnknownProperties(selected)
+            case .searchAlbum: onShowAlbum(track)
+            case .properties: onProperties(selected.count > 1 ? selected : order, track)
+            case .remove:
+                if let playlistID { removeFromPlaylist(selected.compactMap(\.playlistEntryID), playlistID) }
+                else { removeFromLibrary?(targets) }
+            case .transfer, .openCollection: break
             }
-        } else {
-            remove = targets.isEmpty ? nil : removeFromLibrary.map { action in
-                { menu = nil; action(targets) }
-            }
-        }
-        return ZStack(alignment: .topLeading) {
-            Color.clear.contentShape(Rectangle()).onTapGesture { menu = nil }
-            TrackMenu(transfer: canTransfer, playlists: targets.isEmpty ? [] : playlists, addToPlaylist: { id in
-                menu = nil
-                addToPlaylist(targets, id)
-            }, searchAlbum: {
-                menu = nil
-                onShowAlbum(track)
-            }, properties: {
-                menu = nil
-                onProperties(selected.count > 1 ? selected : order, track)
-            }, play: play.map { action in
-                {
-                    menu = nil
-                    action(order, track)
-                }
-            }, enqueue: targets.isEmpty ? nil : enqueue.map { action in
-                {
-                    menu = nil
-                    action(selected, $0)
-                }
-            }, openPlaylistPrompt: {
-                menu = nil
-                onNewPlaylist(targets)
-            }, isPlaylist: playlistID != nil, remove: remove, exportTracks: targets.isEmpty ? nil : exportTracks.map { action in
-                { format in
-                    menu = nil
-                    action(targets, format)
-                }
-            }, lookupAlbum: lookupAlbum.map { action in
-                {
-                    menu = nil
-                    action(track)
-                }
-            }, opensLeft: left, availableHeight: size.height - y)
-            .foregroundStyle(Color(white: 0.08))
-            .environment(\.colorScheme, .light)
-            .id(track.id)
-            .alignmentGuide(.leading) { left ? $0[.trailing] - TrackMenu.width : 0 }
-            .offset(x: x, y: y)
         }
     }
 
@@ -388,6 +350,12 @@ struct CapturedTable: View {
         .foregroundStyle(muted)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Color(white: 0.76)).frame(height: 1)
+        }
+        .windowsContextMenu("表头菜单", width: 156) {
+            [WindowsMenuEntry(id: "columns", title: "歌曲列表上显示项目", action: onColumnSettings),
+             WindowsMenuEntry(id: "restore", title: "恢复默认顺序。", action: {
+                 sortColumn = nil; ascending = true; onRestoreColumnOrder()
+             })]
         }
     }
 
@@ -441,7 +409,9 @@ struct CapturedTable: View {
             let playingID = track.playlistEntryID == nil ? playingTrackID : playingPlaylistEntryID
             let row = HStack(spacing: 0) {
                 Group {
-                    if let playingID, playingID == track.id { Image(systemName: "speaker.wave.2.fill").foregroundStyle(gold) }
+                    if missingTrackIDs.contains(track.localTrack?.id ?? track.id) {
+                        Image(systemName: "exclamationmark.circle").foregroundStyle(gold).help("找不到文件")
+                    } else if let playingID, playingID == track.id { Image(systemName: "speaker.wave.2.fill").foregroundStyle(gold) }
                     else { Color.clear }
                 }
                 .frame(width: 44)
@@ -472,17 +442,10 @@ struct CapturedTable: View {
                 play?(order, track)
             }
             .onTapGesture { select(track, in: order) }
-            .background {
-                GeometryReader { row in
-                    SecondaryClick(size: row.size) { point in
-                        if !selection.contains(track.id) { selection = [track.id] }
-                        selectionAnchor = track.id
-                        let origin = row.frame(in: .named("track-table")).origin
-                        menu = (track, order, playlistID, CGPoint(x: origin.x + point.x, y: origin.y + point.y))
-                    }
-                    .frame(width: row.size.width, height: row.size.height)
-                }
-            }
+            .windowsContextMenu("歌曲菜单", width: 164, prepare: {
+                if !selection.contains(track.id) { selection = [track.id] }
+                selectionAnchor = track.id
+            }) { songMenu(track, order: order, playlistID: playlistID) }
             .accessibilityAddTraits(selection.contains(track.id) ? .isSelected : [])
             if let playlistID, allowsReordering, order.count > 1, sortColumn == nil || (sortColumn == "#" && ascending) {
                 row.onDrag {
@@ -557,7 +520,7 @@ struct CapturedTable: View {
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { selectedPlaylist = group.id; playPlaylist(group) }
         .onTapGesture { selectedPlaylist = group.id }
-        .contextMenu { playlistActions(group) }
+        .windowsContextMenu("播放列表菜单", width: 184, prepare: { selectedPlaylist = group.id }) { playlistActions(group) }
         .accessibilityAddTraits(selectedPlaylist == group.id ? .isSelected : [])
     }
 
@@ -578,7 +541,7 @@ struct CapturedTable: View {
             .background(expanded ? selectedRowColor : .clear)
             .contentShape(Rectangle())
             .onTapGesture { if expanded { expandedPlaylists.remove(group.id) } else { expandedPlaylists.insert(group.id) } }
-            .contextMenu { playlistActions(group) }
+            .windowsContextMenu("播放列表菜单", width: 184, prepare: { selectedPlaylist = group.id }) { playlistActions(group) }
             if expanded { rows(group.tracks, playlistID: group.id) }
         }
     }
@@ -593,26 +556,29 @@ struct CapturedTable: View {
     }
 
     private func playlistMore(_ group: PlaylistGroup) -> some View {
-        Menu { playlistActions(group) } label: {
+        WindowsMenuButton(title: "\(group.name)的更多操作", width: 184, entries: { playlistActions(group) }) {
             Image(systemName: "ellipsis").frame(width: 22, height: 22)
                 .background(.regularMaterial, in: Circle())
         }
-        .fixedSize()
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .accessibilityLabel("\(group.name)的更多操作")
     }
 
-    @ViewBuilder
-    private func playlistActions(_ group: PlaylistGroup) -> some View {
-        Button("播放") { playPlaylist(group) }.disabled(group.tracks.isEmpty)
-        Button("播放下一曲") { enqueue?(group.tracks, .next) }.disabled(group.tracks.isEmpty || enqueue == nil)
-        Button("添加到播放队列") { enqueue?(group.tracks, .end) }.disabled(group.tracks.isEmpty || enqueue == nil)
-        Button("前往播放列表详情界面") { openPlaylist(group.id) }
-        Divider()
-        Button("删除播放列表", role: .destructive) { deletePlaylist(group.playlist) }
-        Divider()
-        Button("属性") { onPlaylistProperties(group) }
+    private func playlistActions(_ group: PlaylistGroup) -> [WindowsMenuEntry] {
+        TrackMenuCatalog.entries(kind: .playlist, playlists: playlists,
+            capabilities: TrackMenuCapabilities(play: !group.tracks.isEmpty, queue: !group.tracks.isEmpty && enqueue != nil,
+                remove: true)) { command in
+            let tracks = group.tracks.compactMap(\.localTrack)
+            switch command {
+            case .play: playPlaylist(group)
+            case .next: enqueue?(group.tracks, .next)
+            case .queue: enqueue?(group.tracks, .end)
+            case .newPlaylist: onNewPlaylist(tracks)
+            case .addToPlaylist(let id): addToPlaylist(tracks, id)
+            case .openCollection: openPlaylist(group.id)
+            case .remove: deletePlaylist(group.playlist)
+            case .properties: onPlaylistProperties(group)
+            default: break
+            }
+        }
     }
 
     @ViewBuilder
@@ -645,7 +611,9 @@ struct CapturedTable: View {
                 selection = selectedCover == nil ? [] : Set(group.tracks.map(\.id))
             }
             .padding(.top, 9)
-            .contextMenu { collectionActions(group, page: page) }
+            .windowsContextMenu(page == .artists ? "艺术家菜单" : "专辑菜单", width: 176, prepare: {
+                selectedCover = group.id; selection = Set(group.tracks.map(\.id))
+            }) { collectionActions(group, page: page) }
         } else {
             Button {
                 if open { expanded.remove(group.id) } else { expanded.insert(group.id) }
@@ -670,17 +638,32 @@ struct CapturedTable: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .contextMenu { collectionActions(group, page: page) }
+            .windowsContextMenu(page == .artists ? "艺术家菜单" : "专辑菜单", width: 176, prepare: {
+                selectedCover = group.id; selection = Set(group.tracks.map(\.id))
+            }) { collectionActions(group, page: page) }
             if open { rows(ordered(group.tracks)) }
         }
     }
 
-    @ViewBuilder private func collectionActions(_ group: TrackCollection, page: LibraryPage) -> some View {
-        Button("播放") { if let first = group.tracks.first { play?(group.tracks, first) } }.disabled(play == nil || group.tracks.isEmpty)
-        Button("播放下一曲") { enqueue?(group.tracks, .next) }.disabled(enqueue == nil || group.tracks.isEmpty)
-        Button("添加到播放队列") { enqueue?(group.tracks, .end) }.disabled(enqueue == nil || group.tracks.isEmpty)
-        Divider()
-        Button("属性") { onCollectionProperties(group, page) }
+    private func collectionActions(_ group: TrackCollection, page: LibraryPage) -> [WindowsMenuEntry] {
+        let tracks = group.tracks.compactMap(\.localTrack)
+        return TrackMenuCatalog.entries(kind: page == .artists ? .artist : .album, playlists: tracks.isEmpty ? [] : playlists,
+            capabilities: TrackMenuCapabilities(play: play != nil && !group.tracks.isEmpty, queue: enqueue != nil && !tracks.isEmpty,
+                remove: removeFromLibrary != nil && !tracks.isEmpty)) { command in
+            switch command {
+            case .play: if let first = group.tracks.first { play?(group.tracks, first) }
+            case .next: enqueue?(group.tracks, .next)
+            case .queue: enqueue?(group.tracks, .end)
+            case .newPlaylist: onNewPlaylist(tracks)
+            case .addToPlaylist(let id): addToPlaylist(tracks, id)
+            case .openCollection: onOpenCollection(group, page)
+            case .unknownProperties: onUnknownProperties(group.tracks)
+            case .searchAlbum: if let track = group.tracks.first { onShowAlbum(track) }
+            case .remove: removeFromLibrary?(tracks)
+            case .properties: onCollectionProperties(group, page)
+            default: break
+            }
+        }
     }
 
     private func disclosure(_ open: Bool) -> some View {

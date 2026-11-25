@@ -1,180 +1,56 @@
 import SwiftUI
 
-struct TrackMenu: View {
-    let transfer: Bool
-    let playlists: [Playlist]
-    let addToPlaylist: (UUID) -> Void
-    let searchAlbum: () -> Void
-    let properties: () -> Void
-    let play: (() -> Void)?
-    let enqueue: ((Player.QueuePlacement) -> Void)?
-    let openPlaylistPrompt: () -> Void
-    let isPlaylist: Bool
-    let remove: (() -> Void)?
-    let exportTracks: ((AudioExportFormat) -> Void)?
-    let lookupAlbum: (() -> Void)?
-
-    @State private var hovered: String?
-    nonisolated static let width: CGFloat = 174
-    static let submenuWidth: CGFloat = 164
-    let opensLeft: Bool
-    let availableHeight: CGFloat
-
-    private var groups: [[String]] {
-        [(transfer ? ["传输至\(CapturedLibrary.device)"] : []) +
-         ["播放", "播放下一曲", "添加到播放队列", "添加到播放列表", "编辑歌曲"],
-         ["在线查找专辑…", "搜索专辑"], [isPlaylist ? "从播放列表删除" : "删除"], ["属性"]]
-    }
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 0) {
-            if opensLeft { submenuColumn }
-            mainColumn
-            if !opensLeft { submenuColumn }
-        }
-        .fixedSize(horizontal: true, vertical: false)
-        .font(.system(size: 11))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("歌曲菜单")
-    }
-
-    private var mainColumn: some View {
-        VStack(spacing: 0) {
-            ForEach(groups.indices, id: \.self) { index in
-                if index > 0 {
-                    Rectangle().fill(Color(red: 0.82, green: 0.89, blue: 0.99))
-                        .frame(height: 1).padding(.vertical, 6)
-                }
-                ForEach(groups[index], id: \.self) { title in
-                    let hasChildren = title == "添加到播放列表" || !submenu(title).isEmpty
-                    row(title, hasChildren: hasChildren, highlighted: hovered == title) {
-                        if hasChildren { hovered = title } else { run(title) }
-                    }
-                    .disabled(!isEnabled(title))
-                    .onHover { if $0 { hovered = title } }
-                }
-            }
-        }
-        .padding(.vertical, 9)
-        .frame(width: Self.width)
-        .modifier(MenuSurface())
-    }
-
-    @ViewBuilder
-    private var submenuColumn: some View {
-        if let hovered {
-            let entries = submenu(hovered)
-            let addsToPlaylist = hovered == "添加到播放列表"
-            let count = addsToPlaylist ? playlists.count + 1 : entries.count
-            if count > 0 {
-                let height = min(availableHeight, CGFloat(count) * 22 + 14)
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if addsToPlaylist {
-                            SubmenuRow(title: "新建…", action: openPlaylistPrompt)
-                            ForEach(playlists) { playlist in
-                                SubmenuRow(title: playlist.name) { addToPlaylist(playlist.id) }
-                            }
-                        } else {
-                            ForEach(entries, id: \.self) { item in
-                                SubmenuRow(title: item) { run(item) }.disabled(!isEnabled(item))
-                            }
-                        }
-                    }
-                    .padding(.vertical, 7)
-                }
-                .frame(width: Self.submenuWidth, height: height)
-                .modifier(MenuSurface())
-                .padding(.top, max(0, min(rowOffset(hovered), availableHeight - height)))
-            }
-        }
-    }
-
-    private func rowOffset(_ title: String) -> CGFloat {
-        var offset: CGFloat = 0
-        for (index, group) in groups.enumerated() {
-            if index > 0 { offset += 13 }
-            if let row = group.firstIndex(of: title) { return offset + CGFloat(row) * 22 }
-            offset += CGFloat(group.count) * 22
-        }
-        return 0
-    }
-
-    private func submenu(_ title: String) -> [String] {
-        switch title {
-        case "编辑歌曲": ["导出 WAV…", "导出 FLAC…"]
-        case "传输至\(CapturedLibrary.device)": [CapturedLibrary.storage]
-        default: []
-        }
-    }
-
-    private func isEnabled(_ title: String) -> Bool {
-        switch title {
-        case "在线查找专辑…": lookupAlbum != nil
-        case "播放": play != nil
-        case "播放下一曲", "添加到播放队列": enqueue != nil
-        case "删除", "从播放列表删除": remove != nil
-        case "导出 WAV…", "导出 FLAC…": exportTracks != nil
-        default: true
-        }
-    }
-
-    private func run(_ title: String) {
-        switch title {
-        case "播放": play?()
-        case "播放下一曲": enqueue?(.next)
-        case "添加到播放队列": enqueue?(.end)
-        case "在线查找专辑…": lookupAlbum?()
-        case "搜索专辑": searchAlbum()
-        case "属性": properties()
-        case "导出 WAV…": exportTracks?(.wav)
-        case "导出 FLAC…": exportTracks?(.flac)
-        case "删除", "从播放列表删除": remove?()
-        default: break
-        }
-    }
-
-    private func row(_ title: String, hasChildren: Bool, highlighted: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title).lineLimit(1)
-                Spacer(minLength: 0)
-                if hasChildren { Image(systemName: "chevron.right").font(.system(size: 8, weight: .semibold)) }
-            }
-            .padding(.horizontal, 14)
-            .frame(height: 22)
-            .background(highlighted ? Color(white: 0.94) : .white)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
+enum TrackMenuCommand {
+    case play, next, queue, newPlaylist, classify, exportWav, exportFlac, unknownProperties, searchAlbum, remove, properties, openCollection, transfer
+    case addToPlaylist(UUID)
 }
 
-private struct SubmenuRow: View {
-    let title: String
-    let action: () -> Void
-    @State private var hovered = false
+enum TrackMenuKind { case song, playlistSong, album, artist, playlist, playlistDetail }
 
-    var body: some View {
-        Button(action: action) {
-            Text(title).lineLimit(1).padding(.horizontal, 14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(height: 22)
-                .background(hovered ? Color(white: 0.94) : .white)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .onHover { hovered = $0 }
-    }
+struct TrackMenuCapabilities {
+    var play = false
+    var queue = false
+    var edit = false
+    var remove = false
+    var transfer = false
 }
 
-private struct MenuSurface: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(.white, in: RoundedRectangle(cornerRadius: 10))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .compositingGroup()
-            .shadow(color: .black.opacity(0.24), radius: 8, y: 6)
+enum TrackMenuCatalog {
+    static func entries(kind: TrackMenuKind, playlists: [Playlist], capabilities: TrackMenuCapabilities, showsDestination: Bool = true,
+                        perform: @escaping (TrackMenuCommand) -> Void) -> [WindowsMenuEntry] {
+        func item(_ id: String, _ title: String, _ action: TrackMenuCommand, enabled: Bool = true) -> WindowsMenuEntry {
+            WindowsMenuEntry(id: id, title: title, enabled: enabled, action: { perform(action) })
+        }
+        let add = WindowsMenuEntry(id: "add", title: "添加到播放列表", children:
+            [item("new", "新建...", .newPlaylist)] + playlists.map {
+                item($0.id.uuidString, $0.name, .addToPlaylist($0.id))
+            }, childWidth: 164)
+        var first = [item("play", "播放", .play, enabled: capabilities.play),
+            item("next", "播放下一曲", .next, enabled: capabilities.queue),
+            item("queue", "添加到播放队列", .queue, enabled: capabilities.queue), add]
+        if capabilities.transfer {
+            first.insert(WindowsMenuEntry(id: "transfer", title: "传输至" + CapturedLibrary.device,
+                children: [item("storage", CapturedLibrary.storage, .transfer, enabled: false)]), at: 0)
+        }
+        if kind == .song || kind == .playlistSong {
+            first.append(WindowsMenuEntry(id: "edit", title: "编辑歌曲", children: [
+                item("classify", "分类...", .classify),
+                item("wav", "保存为WAV格式...", .exportWav, enabled: capabilities.edit),
+                item("flac", "保存为FLAC格式...", .exportFlac, enabled: capabilities.edit)]))
+            return WindowsMenuEntry.sections([first,
+                [item("unknown", "获取未知属性", .unknownProperties), item("search", "搜索专辑", .searchAlbum)],
+                [item("remove", kind == .playlistSong ? "从播放列表删除" : "删除", .remove, enabled: capabilities.remove)],
+                [item("properties", "属性", .properties)]])
+        }
+        var groups = [first]
+        if kind != .playlistDetail && showsDestination {
+            let title = kind == .album ? "前往专辑详情界面" : kind == .artist ? "前往艺术家详情界面" : "前往播放列表详情界面"
+            groups.append([item("open", title, .openCollection)])
+        }
+        if kind == .album { groups.append([item("unknown", "获取未知属性", .unknownProperties), item("search", "搜索专辑", .searchAlbum)]) }
+        groups.append([item("remove", kind == .playlist || kind == .playlistDetail ? "删除播放列表" : "删除", .remove, enabled: capabilities.remove)])
+        groups.append([item("properties", "属性", .properties)])
+        return WindowsMenuEntry.sections(groups)
     }
 }
 

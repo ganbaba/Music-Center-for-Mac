@@ -410,13 +410,13 @@ struct AudioPopover: View {
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 0) {
-                                let queue = player.queue
-                                ForEach(queue.indices, id: \.self) { index in
-                                    let track = queue[index]
-                                    Button { player.jump(to: index) } label: {
+                                let queue = player.queueEntries
+                                ForEach(queue, id: \.queueID) { entry in
+                                    let track = entry.track
+                                    Button { player.jump(toQueueEntry: entry.queueID) } label: {
                                         HStack(spacing: 7) {
                                             Image(systemName: player.isPlaying ? "speaker.wave.2.fill" : "pause.fill")
-                                                .opacity(player.index == index ? 1 : 0)
+                                                .opacity(player.currentItem?.queueID == entry.queueID ? 1 : 0)
                                             VStack(alignment: .leading, spacing: 3) {
                                                 Text(track.title).lineLimit(1)
                                                 Text(track.artist).font(.system(size: 10))
@@ -424,11 +424,14 @@ struct AudioPopover: View {
                                             Spacer()
                                             Text(track.duration.map(previewTime) ?? "—").font(.system(size: 10))
                                         }
-                                        .foregroundStyle(player.index == index ? gold : .primary)
+                                        .foregroundStyle(player.currentItem?.queueID == entry.queueID ? gold : .primary)
                                         .frame(height: 39)
                                         .contentShape(Rectangle())
                                     }
                                     .buttonStyle(.plain)
+                                    .windowsContextMenu("队列项目菜单", width: 132) {
+                                        [WindowsMenuEntry(id: "remove", title: "从队列中删除歌曲", action: { player.removeQueueEntry(entry.queueID) })]
+                                    }
                                 }
                             }
                         }

@@ -203,19 +203,13 @@ struct WalkmanManagement: View {
             }
         }
         .onChange(of: connected) { if !connected { selected = [] } else { revision += 1 } }
-        .alert("从设备删除歌曲？", isPresented: Binding(
-            get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }
-        ), presenting: pendingDeletion) { files in
-            Button("取消", role: .cancel) {}
-            Button("删除", role: .destructive) {
-                do {
-                    try WalkmanFiles.remove(files, folders: folders, on: volume)
-                } catch { self.error = error.localizedDescription }
+        .windowsAlert(isPresented: Binding(get: { !pendingDeletion.isEmpty }, set: { if !$0 { pendingDeletion = [] } }),
+            message: "将永久删除设备上的\(pendingDeletion.count)个音频文件。", symbol: .warning, width: 392,
+            buttons: [WindowsDialogButton("yes", "是") {
+                do { try WalkmanFiles.remove(pendingDeletion, folders: folders, on: volume) }
+                catch { self.error = error.localizedDescription }
                 revision += 1
-            }
-        } message: { files in
-            Text("将永久删除设备上的 \(files.count) 个音频文件。")
-        }
+            }, WindowsDialogButton("no", "否")], defaultButton: "no", cancelButton: "no")
     }
 
     private func chooseDestination() {

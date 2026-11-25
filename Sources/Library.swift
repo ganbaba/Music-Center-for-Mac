@@ -897,3 +897,26 @@ private final class LibraryDatabase {
         Failure(message: String(cString: sqlite3_errmsg(connection)))
     }
 }
+
+/// A user-requested existence check. Permission/read failures are not missing files.
+struct MissingTrackReport: Sendable {
+    var missing: Set<UUID> = []
+    var unreadable: Set<UUID> = []
+    static func scan(_ tracks: [Track]) async -> Self {
+        await Task.detached(priority: .userInitiated) {
+            var report = Self()
+            for track in tracks {
+                if Task.isCancelled { break }
+                do {
+                    if try !track.url.checkResourceIsReachable() { report.missing.insert(track.id) }
+                } catch {
+                    let error = error as NSError
+                    if error.domain == NSCocoaErrorDomain && [NSFileNoSuchFileError, NSFileReadNoSuchFileError].contains(error.code) {
+                        report.missing.insert(track.id)
+                    } else { report.unreadable.insert(track.id) }
+                }
+            }
+            return report
+        }.value
+    }
+}

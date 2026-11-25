@@ -95,9 +95,7 @@ struct PropertiesPanel: View {
         .environment(\.colorScheme, .light)
         .background(.white).compositingGroup().shadow(color: .black.opacity(0.45), radius: 7, y: 2)
         .accessibilityElement(children: .contain).accessibilityLabel("属性")
-        .alert("Music Center UI Preview", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
-            Button("确定") { message = nil }
-        } message: { Text(message ?? "") }
+        .windowsAlert(isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } }), message: message ?? "")
         .task(id: subject.key) {
             let key = subject.key
             guard !loaded.contains(key) else { return }

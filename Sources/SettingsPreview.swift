@@ -221,9 +221,7 @@ struct SettingsPreview: View {
         .foregroundStyle(ink)
         .frame(width: 710, height: panelHeight)
         .modifier(SettingsDropdownHost(resetID: page.rawValue))
-        .alert("Music Center UI Preview", isPresented: Binding(get: { explanation != nil }, set: { if !$0 { explanation = nil } })) {
-            Button("确定") { explanation = nil }
-        } message: { Text(explanation ?? "") }
+        .windowsAlert(isPresented: Binding(get: { explanation != nil }, set: { if !$0 { explanation = nil } }), message: explanation ?? "")
         .background(.white)
         .compositingGroup()
         .shadow(color: .black.opacity(0.55), radius: 7, y: 2)

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1D3A7002026112530000002 /* WindowsDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112540000002 /* WindowsDialog.swift */; };
+		A1D3A7002026112530000001 /* WindowsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112540000001 /* WindowsMenu.swift */; };
 		A1D3A7002026112510000002 /* PropertiesPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112520000002 /* PropertiesPanel.swift */; };
 		A1D3A7002026112510000001 /* LibraryProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112520000001 /* LibraryProperties.swift */; };
 		A1D3A7002026112500000001 /* SettingsControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112500000002 /* SettingsControls.swift */; };
@@ -35,6 +37,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A1D3A7002026112540000002 /* WindowsDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsDialog.swift; sourceTree = "<group>"; };
+		A1D3A7002026112540000001 /* WindowsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsMenu.swift; sourceTree = "<group>"; };
 		A1D3A7002026112520000002 /* PropertiesPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PropertiesPanel.swift; sourceTree = "<group>"; };
 		A1D3A7002026112520000001 /* LibraryProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryProperties.swift; sourceTree = "<group>"; };
 		A1D3A7002026112500000002 /* SettingsControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsControls.swift; sourceTree = "<group>"; };
@@ -87,6 +91,8 @@
 				B9D326FAD765E5CA8226FDD3 /* SettingsPreview.swift */,
 				A1D3A7002026112500000002 /* SettingsControls.swift */,
 				A1D3A7002026112520000002 /* PropertiesPanel.swift */,
+				A1D3A7002026112540000002 /* WindowsDialog.swift */,
+				A1D3A7002026112540000001 /* WindowsMenu.swift */,
 				A1D3A7002026112520000001 /* LibraryProperties.swift */,
 				2BFE03155F660367989C9B50 /* TrackMenu.swift */,
 				F5C5C650E175174A89BB5193 /* TrackTags.swift */,
@@ -202,6 +208,8 @@
 				C6EE30DBB11336B531210940 /* SettingsPreview.swift in Sources */,
 				A1D3A7002026112500000001 /* SettingsControls.swift in Sources */,
 				A1D3A7002026112510000002 /* PropertiesPanel.swift in Sources */,
+				A1D3A7002026112530000002 /* WindowsDialog.swift in Sources */,
+				A1D3A7002026112530000001 /* WindowsMenu.swift in Sources */,
 				A1D3A7002026112510000001 /* LibraryProperties.swift in Sources */,
 				80727E0AF47B09D83944A5F2 /* TrackMenu.swift in Sources */,
 				2C9F64CCFC69A8EC39CBEA33 /* TrackTags.swift in Sources */,

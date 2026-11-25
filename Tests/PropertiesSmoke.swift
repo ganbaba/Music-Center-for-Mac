@@ -77,9 +77,16 @@ func verifyProperties(in root: URL) async throws {
     let trackArtist = PropertySubject.collection(TrackCollection.group(rows(), by: .artists, groupArtistsByTrack: true)[0], artist: true, byTrack: true)
     try library.saveProperties([PropertyChange(subject: trackArtist, fields: [.artist: "Soloist"])])
     try check(rows()[0].artist == "Soloist" && rows()[1].artist == "Artist 2", "track artist grouping")
-    let playlistID = library.createPlaylist("Test list", tracks: [rows()[0].localTrack!, rows()[0].localTrack!, rows()[1].localTrack!])!
+    let playlistFile = root.appending(path: "Test list.m3u8")
+    try ("#EXTM3U\n" + [rows()[0], rows()[0], rows()[1]].map { $0.localTrack!.url.absoluteString }.joined(separator: "\n")).write(to: playlistFile, atomically: true, encoding: .utf8)
+    let imported = await library.importPlaylist(playlistFile)
+    try check(imported, "duplicate playlist import")
+    let playlistID = library.playlists.first { $0.name == "Test list" }!.id
     let entries = library.playlistEntries[playlistID]!
-    let group = PlaylistGroup(playlist: library.playlists.first { $0.id == playlistID }!, tracks: rows())
+    try check(entries.count == 3 && entries[0].trackID == entries[1].trackID && entries[0].id != entries[1].id, "real duplicate membership fixture")
+    let byID = Dictionary(uniqueKeysWithValues: rows().map { ($0.localTrack!.id, $0) })
+    let members = entries.enumerated().map { byID[$0.element.trackID]!.inPlaylist(entryID: $0.element.id, position: $0.offset + 1) }
+    let group = PlaylistGroup(playlist: library.playlists.first { $0.id == playlistID }!, tracks: members)
     try library.saveProperties([PropertyChange(subject: .playlist(group), fields: [.title: "New list", .creator: "QA", .comment: "line 1\nline 2"], artwork: photo, changesArtwork: true)])
     try check(library.playlists.first { $0.id == playlistID }?.name == "New list" && library.playlistEntries[playlistID]!.map(\.id) == entries.map(\.id), "playlist metadata preserves duplicate memberships")
     try check(library.propertyRecords[.playlist(playlistID)]?.createdAt != nil, "playlist registration date")
