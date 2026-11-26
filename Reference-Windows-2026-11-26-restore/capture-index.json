@@ -23,6 +23,16 @@
       "height": 1592,
       "bytes": 127175,
       "sha256": "87e07cffd173d61662f2fd998d7a387ca40658f3e17d74d69511eb633b7ffffa"
+    },
+    {
+      "file": "capture/03-runtime-write-failed.png",
+      "label": "恢复运行时写入失败",
+      "method": "Lucas 窗口直接截图，裁至对话框且未缩放",
+      "capturedAtHongKong": "2026-11-26T22:57:05+08:00",
+      "width": 1440,
+      "height": 1410,
+      "bytes": 158967,
+      "sha256": "9c9186ed0434b225ba02cb29b484ab09f25c77746f62d47054fe1562ce79f5b7"
     }
   ]
 }
