@@ -91,7 +91,47 @@ func verifyProperties(in root: URL) async throws {
     try check(library.playlists.first { $0.id == playlistID }?.name == "New list" && library.playlistEntries[playlistID]!.map(\.id) == entries.map(\.id), "playlist metadata preserves duplicate memberships")
     try check(library.propertyRecords[.playlist(playlistID)]?.createdAt != nil, "playlist registration date")
     let archive = root.appending(path: "properties.musiccenterbackup")
-    try library.backup(to: archive, preferences: prefs)
+    let notes = "测试备份：第一行\n第二行 '音乐'"
+    let estimate = try await library.backupSize(preferences: prefs)
+    try check(estimate > 0, "real backup size estimate")
+    try library.checkNewBackupDestination(archive)
+    let written = try await library.writeNewBackup(to: archive, notes: notes, preferences: prefs)
+    try check(written.path == archive.resolvingSymlinksInPath().path, "backup published to the selected destination")
+    let hexNotes = notes.utf8.map { String(format: "%02X", $0) }.joined()
+    try sql(archive, """
+        CREATE TEMP TABLE check_metadata (valid INTEGER CHECK(valid = 1));
+        INSERT INTO check_metadata SELECT COUNT(*) FROM music_center_backup_details
+        WHERE created_at > 0 AND hex(notes) = '\(hexNotes)';
+        """)
+    let originalArchive = try Data(contentsOf: archive)
+    let cancelledOutput = root.appending(path: "cancelled.musiccenterbackup")
+    let cancelled = Task { try await library.writeNewBackup(to: cancelledOutput, notes: "", preferences: prefs) }
+    cancelled.cancel()
+    do {
+        _ = try await cancelled.value
+        throw PropertyFailure(message: "cancelled backup was published")
+    } catch is CancellationError {}
+    try check(!FileManager.default.fileExists(atPath: cancelledOutput.path), "cancellation leaves no archive")
+    let obstruction = root.appending(path: "disconnected-destination")
+    let failedOutput = obstruction.appending(path: "failed.musiccenterbackup")
+    try FileManager.default.createDirectory(at: obstruction, withIntermediateDirectories: false)
+    try library.checkNewBackupDestination(failedOutput)
+    try FileManager.default.removeItem(at: obstruction)
+    let originalObstruction = Data("simulated destination write error".utf8)
+    try originalObstruction.write(to: obstruction)
+    for blocked in [archive, failedOutput] {
+        do {
+            _ = try await library.writeNewBackup(to: blocked, notes: "replacement", preferences: prefs)
+            throw PropertyFailure(message: "backup published to a blocked destination")
+        } catch let failure as PropertyFailure { throw failure }
+          catch {}
+    }
+    let currentArchive = try Data(contentsOf: archive)
+    let currentObstruction = try Data(contentsOf: obstruction)
+    try check(currentArchive == originalArchive, "duplicate destination never replaces original archive")
+    try check(currentObstruction == originalObstruction, "write failure preserves unrelated destination file")
+    let leftovers = try FileManager.default.contentsOfDirectory(atPath: root.path)
+    try check(!leftovers.contains { $0.hasPrefix(".music-center-backup-") }, "failed backup leaves no staging file")
     let saved = library.propertyRecords
     try library.saveProperties([PropertyChange(subject: song(0), fields: [.genre: "Changed after backup"])])
     _ = try library.restore(from: archive, preferences: prefs)
@@ -107,7 +147,7 @@ func verifyProperties(in root: URL) async throws {
     try check(library.propertyRecords == saved, "malformed restore leaves current data")
     let legacy = root.appending(path: "legacy.musiccenterbackup")
     try FileManager.default.copyItem(at: archive, to: legacy)
-    try sql(legacy, "DROP TABLE library_properties")
+    try sql(legacy, "DROP TABLE library_properties; DROP TABLE music_center_backup_details")
     _ = try library.restore(from: legacy, preferences: prefs)
     try check(library.propertyRecords.isEmpty && library.tracks.count == 3, "legacy backup migration")
     // A window can outlive removal of its selected entity; it must not create orphan metadata.

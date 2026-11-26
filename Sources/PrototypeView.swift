@@ -61,6 +61,7 @@ struct PrototypeView: View {
     @State private var collectionDetailKey: AlbumKey?
     @State private var notice: String?
     @State private var informationPage: InformationPage?
+    @State private var showsBackup = false
     @State private var playlistDraftTracks: [Track] = []
     @State private var playlistDetailID: UUID?
     @State private var pendingRestore: URL?
@@ -94,7 +95,7 @@ struct PrototypeView: View {
     private var canSelectTracks: Bool { !showsManagement && !capturedTracks.isEmpty }
     private var canClearTrackSelection: Bool { !showsManagement && !selectedTracks.isEmpty }
     private var menuIsBlocked: Bool {
-        informationPage != nil || settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
+        showsBackup || informationPage != nil || settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
             || showsImporter || showsPlaylistPrompt || properties != nil || pendingPlaylistDeletion != nil
             || !pendingTrackDeletion.isEmpty || pendingRestore != nil || notice != nil || classificationMessage != nil
             || library.error != nil || player.error != nil || preferences.error != nil
@@ -374,6 +375,7 @@ struct PrototypeView: View {
             }
         }
         .modifier(InformationPresentation(page: $informationPage))
+        .modifier(BackupPresentation(isPresented: $showsBackup, library: library, preferences: preferences))
         .modifier(WindowsMenuHost(isPresented: $showsMenu, resetID: "\(page.rawValue)-\(menuIsBlocked)-\(sampleLibrary)"))
     }
 
@@ -1550,20 +1552,6 @@ struct PrototypeView: View {
                             disc: audioDisc, tracks: discTracks)
     }
 
-    private func saveBackup() {
-        let panel = NSSavePanel()
-        panel.title = "备份曲库和设置"
-        panel.nameFieldStringValue = "Music Center.musiccenterbackup"
-        panel.message = "备份包含曲库记录、播放列表、历史和设置。音频由原始路径引用。"
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            do {
-                try library.backup(to: url, preferences: preferences)
-                notice = "已保存备份「\(url.lastPathComponent)」。"
-            } catch { notice = "无法创建备份。\(error.localizedDescription)" }
-        }
-    }
-
     private func chooseBackup() {
         let panel = NSOpenPanel()
         panel.title = "选择曲库备份"
@@ -1688,7 +1676,9 @@ struct PrototypeView: View {
         case .eject: ejectAudioDisc()
         case .lookupCD: showDiscLookup()
         case .atrac: chooseATRAC()
-        case .backup: saveBackup()
+        case .backup:
+            searchFocused = false
+            showsBackup = true
         case .restore: chooseBackup()
         case .settings: settingsPage = .display
         case .version: informationPage = .version

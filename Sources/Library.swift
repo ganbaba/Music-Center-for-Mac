@@ -146,12 +146,66 @@ final class Library {
 
     func backup(to url: URL, preferences: PreviewPreferences) throws {
         guard !importing, let database else { throw LibraryDatabase.Failure(message: "曲库正在使用，请稍后重试。") }
-        let support = directory.standardizedFileURL.resolvingSymlinksInPath().path
-        let target = url.standardizedFileURL.resolvingSymlinksInPath().path
-        guard target != support && !target.hasPrefix(support + "/") else {
+        _ = try Self.backupLocation(url, outside: directory)
+        try database.backup(to: url, preferences: preferences.snapshot())
+    }
+
+    func backupSize(preferences: PreviewPreferences) async throws -> Int64 {
+        let source = try backupSource()
+        let settings = try preferences.snapshot()
+        return try await Task.detached(priority: .utility) {
+            let reader = try LibraryDatabase(url: source, readOnly: true)
+            return try reader.usedBytes() + Int64(settings.count)
+        }.value
+    }
+
+    func checkNewBackupDestination(_ url: URL) throws {
+        let location = try Self.backupLocation(url, outside: directory)
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: location.deletingLastPathComponent().path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            throw LibraryDatabase.Failure(message: "请选择可用的保存文件夹。")
+        }
+        if FileManager.default.fileExists(atPath: location.path) {
+            throw LibraryDatabase.Failure(message: "此处已有同名项目。请选择其他名称或文件夹。")
+        }
+    }
+
+    func writeNewBackup(to url: URL, notes: String, preferences: PreviewPreferences) async throws -> URL {
+        try Task.checkCancellation()
+        let source = try backupSource()
+        let settings = try preferences.snapshot()
+        let support = directory
+        let worker = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            let location = try Self.backupLocation(url, outside: support)
+            let reader = try LibraryDatabase(url: source, readOnly: true)
+            try reader.backup(to: location, preferences: settings, notes: notes, replaceExisting: false)
+            return location
+        }
+        return try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
+    }
+
+    private func backupSource() throws -> URL {
+        guard !importing, database != nil else {
+            throw LibraryDatabase.Failure(message: "曲库正在使用或不可用，请稍后重试。")
+        }
+        return directory.appending(path: "Library.sqlite")
+    }
+
+    private nonisolated static func backupLocation(_ url: URL, outside directory: URL) throws -> URL {
+        let support = directory.standardizedFileURL.resolvingSymlinksInPath()
+        let parent = url.deletingLastPathComponent().standardizedFileURL.resolvingSymlinksInPath()
+        let location = parent.appending(component: url.lastPathComponent, directoryHint: .notDirectory)
+        let resolved = location.resolvingSymlinksInPath()
+        guard ![parent, resolved].contains(where: { $0.pathComponents.starts(with: support.pathComponents) }) else {
             throw LibraryDatabase.Failure(message: "请选择曲库文件夹以外的位置。")
         }
-        try database.backup(to: url, preferences: preferences.snapshot())
+        return location
     }
 
     func restore(from url: URL, preferences: PreviewPreferences) throws -> URL {
@@ -514,16 +568,48 @@ private final class LibraryDatabase {
 
     deinit { sqlite3_close(connection) }
 
-    func backup(to url: URL, preferences: Data) throws {
+    func usedBytes() throws -> Int64 {
+        var pages: Int64 = 0
+        var free: Int64 = 0
+        var size: Int64 = 0
+        try query("PRAGMA page_count") { pages = sqlite3_column_int64($0, 0) }
+        try query("PRAGMA freelist_count") { free = sqlite3_column_int64($0, 0) }
+        try query("PRAGMA page_size") { size = sqlite3_column_int64($0, 0) }
+        return max(0, pages - free) * size
+    }
+
+    func backup(to url: URL, preferences: Data, notes: String? = nil, replaceExisting: Bool = true) throws {
         let stage = url.deletingLastPathComponent().appending(path: ".music-center-backup-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: stage) }
-        try execute("VACUUM INTO ?", [.text(stage.path)])
-        let snapshot = try LibraryDatabase(url: stage)
-        try snapshot.execute("""
-            CREATE TABLE music_center_backup (format INTEGER NOT NULL, preferences BLOB NOT NULL)
-            """)
-        try snapshot.execute("INSERT INTO music_center_backup VALUES (1, ?)", [.blob(preferences)])
-        if FileManager.default.fileExists(atPath: url.path) {
+        if !replaceExisting {
+            try Task.checkCancellation()
+            sqlite3_progress_handler(connection, 2_000, { _ in Task.isCancelled ? 1 : 0 }, nil)
+        }
+        defer { if !replaceExisting { sqlite3_progress_handler(connection, 0, nil, nil) } }
+        do {
+            try execute("VACUUM INTO ?", [.text(stage.path)])
+        } catch {
+            if !replaceExisting { try Task.checkCancellation() }
+            throw error
+        }
+        do {
+            let snapshot = try LibraryDatabase(url: stage)
+            try snapshot.transaction {
+                try snapshot.execute("""
+                    CREATE TABLE music_center_backup (format INTEGER NOT NULL, preferences BLOB NOT NULL)
+                    """)
+                try snapshot.execute("INSERT INTO music_center_backup VALUES (1, ?)", [.blob(preferences)])
+                if let notes {
+                    try snapshot.execute("""
+                        CREATE TABLE music_center_backup_details (created_at REAL NOT NULL, notes TEXT NOT NULL)
+                        """)
+                    try snapshot.execute("INSERT INTO music_center_backup_details VALUES (?, ?)",
+                                         [.number(Date.now.timeIntervalSince1970), .text(notes)])
+                }
+            }
+        }
+        if !replaceExisting { try Task.checkCancellation() }
+        if replaceExisting && FileManager.default.fileExists(atPath: url.path) {
             _ = try FileManager.default.replaceItemAt(url, withItemAt: stage)
         } else {
             try FileManager.default.moveItem(at: stage, to: url)
