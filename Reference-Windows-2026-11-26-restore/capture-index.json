@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "date": "2026-11-26",
+  "timezone": "Asia/Hong_Kong",
+  "source": "Windows App / Lucas / Music Center for PC 2.7.4 / Windows 11 中文",
+  "captures": [
+    {
+      "file": "capture/01-progress-72.png",
+      "label": "正在恢复备份数据，72%",
+      "method": "录屏取帧",
+      "width": 1696,
+      "height": 1592,
+      "bytes": 160275,
+      "sha256": "21fa09e03501b8ead7e9c21d195bd48c34237ea45ae44346997a5549aac720b4",
+      "recordingSecond": 2.142,
+      "recordingDurationSeconds": 24.0
+    },
+    {
+      "file": "capture/02-completed.png",
+      "label": "恢复已完成",
+      "method": "直接局部截图",
+      "width": 1696,
+      "height": 1592,
+      "bytes": 127175,
+      "sha256": "87e07cffd173d61662f2fd998d7a387ca40658f3e17d74d69511eb633b7ffffa"
+    }
+  ]
+}
