@@ -1,4 +1,5 @@
 import AVFoundation
+import CryptoKit
 import Foundation
 import Observation
 import SQLite3
@@ -55,7 +56,7 @@ struct AlbumKey: Hashable, Sendable {
     let artist: String
 }
 
-struct TrackPlayback {
+struct TrackPlayback: Sendable {
     let lastPlayedAt: Date
     let count: Int
 }
@@ -65,9 +66,27 @@ struct Playlist: Identifiable, Sendable {
     let name: String
 }
 
-struct PlaylistEntry: Identifiable {
+struct PlaylistEntry: Identifiable, Sendable {
     let id: UUID
     let trackID: UUID
+}
+
+struct RestoreCandidate: Sendable {
+    let url: URL
+    let createdAt: Date?
+    let notes: String?
+    let trackCount: Int
+    fileprivate let digest: SHA256.Digest
+    fileprivate let settings: Data
+}
+
+enum RestoreProgress: Sendable {
+    case checking, savingCurrent, applying
+}
+
+struct RestoreFailure: LocalizedError {
+    let message: String
+    var errorDescription: String? { message }
 }
 
 @MainActor
@@ -80,6 +99,8 @@ final class Library {
     private(set) var playbackHistory: [UUID: TrackPlayback] = [:]
     private(set) var playlistEntries: [UUID: [PlaylistEntry]] = [:]
     private(set) var importing = false
+    private(set) var restoreProgress: RestoreProgress?
+    var restoring: Bool { restoreProgress != nil }
     var message: String?
     var error: String?
     @ObservationIgnored private var database: LibraryDatabase?
@@ -96,7 +117,7 @@ final class Library {
     }
 
     func importItems(_ urls: [URL]) async {
-        guard !importing, !urls.isEmpty else { return }
+        guard !importing, !restoring, !urls.isEmpty else { return }
         importing = true
         defer { importing = false }
         do {
@@ -123,7 +144,7 @@ final class Library {
     }
 
     func importPlaylist(_ url: URL) async -> Bool {
-        guard !importing else { return false }
+        guard !importing, !restoring else { return false }
         importing = true
         defer { importing = false }
         do {
@@ -145,7 +166,7 @@ final class Library {
     }
 
     func backup(to url: URL, preferences: PreviewPreferences) throws {
-        guard !importing, let database else { throw LibraryDatabase.Failure(message: "曲库正在使用，请稍后重试。") }
+        guard !importing, !restoring, let database else { throw LibraryDatabase.Failure(message: "曲库正在使用，请稍后重试。") }
         _ = try Self.backupLocation(url, outside: directory)
         try database.backup(to: url, preferences: preferences.snapshot())
     }
@@ -191,7 +212,7 @@ final class Library {
     }
 
     private func backupSource() throws -> URL {
-        guard !importing, database != nil else {
+        guard !importing, !restoring, database != nil else {
             throw LibraryDatabase.Failure(message: "曲库正在使用或不可用，请稍后重试。")
         }
         return directory.appending(path: "Library.sqlite")
@@ -208,35 +229,109 @@ final class Library {
         return location
     }
 
-    func restore(from url: URL, preferences: PreviewPreferences) throws -> URL {
-        guard !importing, let database else { throw LibraryDatabase.Failure(message: "曲库正在使用，请稍后重试。") }
-        let previous = try preferences.snapshot()
-        let archive = try LibraryDatabase(url: url, readOnly: true)
-        let data = try archive.validatedBackupSettings()
-        let restored = try preferences.decodeSnapshot(data)
-        let rollback = directory.appending(path: "Before Restore \(UUID().uuidString).musiccenterbackup")
-        try database.backup(to: rollback, preferences: previous)
-        var settingsWritten = false
-        do {
-            try database.restoreSnapshot(from: url) {
-                try preferences.writeSnapshot(data)
-                settingsWritten = true
+    func inspectBackup(at url: URL, preferences: PreviewPreferences) async throws -> RestoreCandidate {
+        let worker = Task.detached(priority: .utility) {
+            try Self.withBackupCopy(of: url) { copy in
+                let archive = try LibraryDatabase(url: copy, readOnly: true)
+                let contents = try archive.validatedBackupContents()
+                let details = try archive.backupDetails()
+                return RestoreCandidate(url: url, createdAt: details?.date, notes: details?.notes,
+                                        trackCount: contents.trackCount, digest: try Self.digest(of: copy), settings: contents.settings)
             }
-        } catch {
-            if settingsWritten {
-                do { try preferences.writeSnapshot(previous) }
-                catch {
-                    throw LibraryDatabase.Failure(message: "恢复设置失败。原曲库备份位于「\(rollback.path)」。\(error.localizedDescription)")
-                }
-            }
-            throw error
         }
-        try reload()
+        let candidate = try await withTaskCancellationHandler {
+            try await worker.value
+        } onCancel: {
+            worker.cancel()
+        }
+        _ = try preferences.decodeSnapshot(candidate.settings)
+        return candidate
+    }
+
+    func restore(_ candidate: RestoreCandidate, preferences: PreviewPreferences) async throws -> URL {
+        let source = try backupSource()
+        let previous = try preferences.snapshot()
+        let restored = try preferences.decodeSnapshot(candidate.settings)
+        let writeSettings = preferences.restorationWriter()
+        let rollback = directory.appending(path: "Before Restore \(UUID().uuidString).musiccenterbackup")
+        restoreProgress = .checking
+        defer { restoreProgress = nil }
+
+        let contents = try await Task.detached(priority: .userInitiated) {
+            let folder = try Self.copyBackup(from: candidate.url)
+            defer { try? FileManager.default.removeItem(at: folder) }
+            let copy = folder.appending(path: "Selected.musiccenterbackup")
+            guard try Self.digest(of: copy) == candidate.digest else {
+                throw RestoreFailure(message: "备份文件已更改，请重新选择后再恢复。")
+            }
+            await self.setRestoreProgress(.savingCurrent)
+            let writer = try LibraryDatabase(url: source, existing: true)
+            do {
+                try writer.backup(to: rollback, preferences: previous, notes: "恢复前自动备份")
+            } catch {
+                throw RestoreFailure(message: "无法保存恢复前备份。请检查曲库所在磁盘的可用空间。")
+            }
+            await self.setRestoreProgress(.applying)
+            var settingsWritten = false
+            do {
+                return try writer.restoreSnapshot(from: copy) {
+                    try writeSettings(candidate.settings, true)
+                    settingsWritten = true
+                }
+            } catch {
+                if settingsWritten {
+                    do { try writeSettings(previous, false) }
+                    catch { throw RestoreFailure(message: "无法还原恢复前的设置。恢复前备份位于：\n\(rollback.path)") }
+                }
+                throw RestoreFailure(message: "无法恢复曲库或设置。恢复前备份位于：\n\(rollback.path)")
+            }
+        }.value
+        (tracks, playlists, playlistEntries, playbackHistory) = contents.library
+        propertyRecords = contents.properties
         preferences.applySnapshot(restored)
         return rollback
     }
 
+    private func setRestoreProgress(_ stage: RestoreProgress) {
+        restoreProgress = stage
+    }
+
+    private nonisolated static func withBackupCopy<T>(of url: URL, perform: (URL) throws -> T) throws -> T {
+        let folder = try copyBackup(from: url)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        return try perform(folder.appending(path: "Selected.musiccenterbackup"))
+    }
+
+    private nonisolated static func copyBackup(from url: URL) throws -> URL {
+        let source = url.standardizedFileURL.resolvingSymlinksInPath()
+        let folder = URL.temporaryDirectory.appending(path: "music-center-restore-\(UUID().uuidString)", directoryHint: .isDirectory)
+        do {
+            guard url.isFileURL, try source.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else {
+                throw CocoaError(.fileReadUnsupportedScheme)
+            }
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false,
+                                                    attributes: [.posixPermissions: 0o700])
+            try FileManager.default.copyItem(at: source, to: folder.appending(path: "Selected.musiccenterbackup"))
+            return folder
+        } catch {
+            try? FileManager.default.removeItem(at: folder)
+            throw RestoreFailure(message: "无法读取备份文件。请确认文件仍可访问，再重新选择。")
+        }
+    }
+
+    private nonisolated static func digest(of url: URL) throws -> SHA256.Digest {
+        let file = try FileHandle(forReadingFrom: url)
+        defer { try? file.close() }
+        var sha = SHA256()
+        while let data = try file.read(upToCount: 1024 * 1024), !data.isEmpty {
+            try Task.checkCancellation()
+            sha.update(data: data)
+        }
+        return sha.finalize()
+    }
+
     func refresh() {
+        guard !restoring else { return }
         do {
             try reload()
         } catch {
@@ -245,7 +340,7 @@ final class Library {
     }
 
     func restoreImportedMetadata() async {
-        guard !importing, let database else { return }
+        guard !importing, !restoring, let database else { return }
         importing = true
         defer { importing = false }
         do {
@@ -261,7 +356,7 @@ final class Library {
     }
 
     func saveProperties(_ changes: [PropertyChange]) throws {
-        guard let database else { throw LibraryDatabase.Failure(message: "曲库不可用。") }
+        guard !restoring, let database else { throw LibraryDatabase.Failure(message: "曲库不可用。") }
         try database.transaction {
             var records = try database.loadProperties()
             for change in changes where !change.fields.isEmpty || change.changesArtwork {
@@ -327,6 +422,7 @@ final class Library {
     }
 
     func recordPlayback(of track: Track) {
+        guard !restoring else { return }
         do {
             if let playback = try database?.recordPlayback(of: track.id, at: .now) {
                 playbackHistory[track.id] = playback
@@ -338,6 +434,7 @@ final class Library {
 
     @discardableResult
     private func update(_ operation: (LibraryDatabase) throws -> Void) -> Bool {
+        guard !restoring else { return false }
         do {
             guard let database else { throw LibraryDatabase.Failure(message: "曲库不可用。") }
             try operation(database)
@@ -485,6 +582,11 @@ enum TrackScanner {
 }
 
 private final class LibraryDatabase {
+    struct RestoredContents: Sendable {
+        let library: ([Track], [Playlist], [UUID: [PlaylistEntry]], [UUID: TrackPlayback])
+        let properties: [PropertyKey: PropertyRecord]
+    }
+
     struct Failure: LocalizedError {
         let message: String
         var errorDescription: String? { message }
@@ -499,9 +601,9 @@ private final class LibraryDatabase {
     private let connection: OpaquePointer
     private let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
-    init(url: URL, readOnly: Bool = false) throws {
+    init(url: URL, readOnly: Bool = false, existing: Bool = false) throws {
         var handle: OpaquePointer?
-        let access = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE
+        let access = readOnly ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | (existing ? 0 : SQLITE_OPEN_CREATE)
         guard sqlite3_open_v2(url.path, &handle, access | SQLITE_OPEN_URI, nil) == SQLITE_OK,
               let handle else {
             let message = handle.map { String(cString: sqlite3_errmsg($0)) } ?? "SQLite 无法打开数据库。"
@@ -512,7 +614,7 @@ private final class LibraryDatabase {
         sqlite3_busy_timeout(connection, 3_000)
         try execute("PRAGMA trusted_schema = OFF")
         try execute("PRAGMA foreign_keys = ON")
-        if readOnly { return }
+        if readOnly || existing { return }
         try transaction {
             try execute("""
                 CREATE TABLE IF NOT EXISTS tracks (
@@ -616,7 +718,7 @@ private final class LibraryDatabase {
         }
     }
 
-    func validatedBackupSettings() throws -> Data {
+    func validatedBackupContents() throws -> (settings: Data, trackCount: Int) {
         var version: Int32 = 0
         try query("PRAGMA user_version") { version = sqlite3_column_int($0, 0) }
         guard version == 3 else { throw Failure(message: "此备份的曲库版本不受支持。") }
@@ -624,7 +726,7 @@ private final class LibraryDatabase {
             guard string(row, 0) == "ok" else { throw Failure(message: "备份中的曲库已损坏。") }
         }
         try query("PRAGMA foreign_key_check") { _ in throw Failure(message: "备份中的播放列表引用无效。") }
-        _ = try load()
+        let (tracks, _, _, _) = try load()
         _ = try loadProperties()
         var data: Data?
         try query("SELECT format, preferences FROM music_center_backup") { row in
@@ -634,16 +736,31 @@ private final class LibraryDatabase {
             data = Data(bytes: bytes, count: Int(sqlite3_column_bytes(row, 1)))
         }
         guard let data else { throw Failure(message: "备份中缺少设置。") }
-        return data
+        return (data, tracks.count)
     }
 
-    func restoreSnapshot(from url: URL, applyingSettings: () throws -> Void) throws {
+    func backupDetails() throws -> (date: Date, notes: String)? {
+        var exists = false
+        try query("SELECT 1 FROM sqlite_schema WHERE type = 'table' AND name = 'music_center_backup_details'") { _ in exists = true }
+        guard exists else { return nil }
+        var details: (Date, String)?
+        try query("SELECT created_at, notes FROM music_center_backup_details") { row in
+            let timestamp = sqlite3_column_double(row, 0)
+            guard details == nil, timestamp.isFinite, timestamp > 0, sqlite3_column_type(row, 1) == SQLITE_TEXT else {
+                throw Failure(message: "备份日期或备注格式无效。")
+            }
+            details = (Date(timeIntervalSince1970: timestamp), string(row, 1))
+        }
+        return details
+    }
+
+    func restoreSnapshot(from url: URL, applyingSettings: () throws -> Void) throws -> RestoredContents {
         guard var location = URLComponents(url: url, resolvingAgainstBaseURL: true) else { throw CocoaError(.fileReadInvalidFileName) }
         location.queryItems = [URLQueryItem(name: "mode", value: "ro")]
         guard let source = location.string else { throw CocoaError(.fileReadInvalidFileName) }
         try execute("ATTACH DATABASE ? AS restore", [.text(source)])
         defer { try? execute("DETACH DATABASE restore") }
-        try transaction {
+        return try transaction {
             try execute("DELETE FROM library_properties")
             try execute("DELETE FROM playlist_entries")
             try execute("DELETE FROM playlists")
@@ -662,9 +779,9 @@ private final class LibraryDatabase {
             if sourceHasProperties {
                 try execute("INSERT INTO library_properties SELECT kind, identity, data FROM restore.library_properties")
             }
-            _ = try load()
-            _ = try loadProperties()
+            let contents = RestoredContents(library: try load(), properties: try loadProperties())
             try applyingSettings()
+            return contents
         }
     }
 
@@ -917,11 +1034,12 @@ private final class LibraryDatabase {
         guard exists else { throw Failure(message: "此项目已从曲库移除，请关闭属性后重新选择。") }
     }
 
-    func transaction(_ operation: () throws -> Void) throws {
+    func transaction<T>(_ operation: () throws -> T) throws -> T {
         try execute("BEGIN IMMEDIATE")
         do {
-            try operation()
+            let result = try operation()
             try execute("COMMIT")
+            return result
         } catch {
             try? execute("ROLLBACK")
             throw error

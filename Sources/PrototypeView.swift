@@ -64,7 +64,7 @@ struct PrototypeView: View {
     @State private var showsBackup = false
     @State private var playlistDraftTracks: [Track] = []
     @State private var playlistDetailID: UUID?
-    @State private var pendingRestore: URL?
+    @State private var showsRestore = false
     @State private var pendingPlaylistDeletion: Playlist?
     @State private var pendingTrackDeletion: Set<UUID> = []
     @State private var playlistsShowGrid = true
@@ -95,9 +95,10 @@ struct PrototypeView: View {
     private var canSelectTracks: Bool { !showsManagement && !capturedTracks.isEmpty }
     private var canClearTrackSelection: Bool { !showsManagement && !selectedTracks.isEmpty }
     private var menuIsBlocked: Bool {
-        showsBackup || informationPage != nil || settingsPage != nil || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
+        showsBackup || showsRestore || library.restoring || informationPage != nil || settingsPage != nil
+            || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
             || showsImporter || showsPlaylistPrompt || properties != nil || pendingPlaylistDeletion != nil
-            || !pendingTrackDeletion.isEmpty || pendingRestore != nil || notice != nil || classificationMessage != nil
+            || !pendingTrackDeletion.isEmpty || notice != nil || classificationMessage != nil
             || library.error != nil || player.error != nil || preferences.error != nil
     }
 
@@ -341,18 +342,6 @@ struct PrototypeView: View {
             get: { library.error != nil || player.error != nil || preferences.error != nil },
             set: { if !$0 { library.error = nil; player.error = nil; preferences.error = nil } }
         ), message: library.error ?? player.error ?? preferences.error ?? "", symbol: .error)
-        .windowsAlert(isPresented: Binding(get: { pendingRestore != nil }, set: { if !$0 { pendingRestore = nil } }),
-            message: "用「\(pendingRestore?.lastPathComponent ?? "")」中的曲库、播放历史和设置替换当前数据。恢复前会保存一份当前备份。",
-            symbol: .warning, width: 392, buttons: [WindowsDialogButton("yes", "恢复") {
-                guard let url = pendingRestore else { return }
-                do {
-                    let previous = try library.restore(from: url, preferences: preferences)
-                    player.clearQueue()
-                    player.setInitialAudio(outputUID: settings.outputDeviceUID, equalizer: equalizer, renderingRate: settings.outputSampleRate)
-                    refreshAudioDisc(); sampleLibrary = false; selectPage(.songs)
-                    notice = "已恢复曲库和设置。恢复前的备份位于「\(previous.path)」。"
-                } catch { notice = "无法恢复备份。\(error.localizedDescription)" }
-            }, WindowsDialogButton("no", "取消")], defaultButton: "no", cancelButton: "no")
         .windowsAlert(isPresented: Binding(get: { !pendingTrackDeletion.isEmpty }, set: { if !$0 { pendingTrackDeletion = [] } }),
             message: "将从我的音乐库删除所选项目。\n\(pendingTrackDeletion.count)歌曲", symbol: .warning, width: 392,
             buttons: [WindowsDialogButton("yes", "是") {
@@ -375,7 +364,14 @@ struct PrototypeView: View {
             }
         }
         .modifier(InformationPresentation(page: $informationPage))
-        .modifier(BackupPresentation(isPresented: $showsBackup, library: library, preferences: preferences))
+        .modifier(LibraryWizardPresentation(isPresented: showsBackup || showsRestore) {
+            if showsRestore {
+                RestoreWizard(library: library, preferences: preferences, didRestore: didRestore,
+                              close: { showsRestore = false })
+            } else {
+                BackupWizard(library: library, preferences: preferences, close: { showsBackup = false })
+            }
+        })
         .modifier(WindowsMenuHost(isPresented: $showsMenu, resetID: "\(page.rawValue)-\(menuIsBlocked)-\(sampleLibrary)"))
     }
 
@@ -1552,14 +1548,12 @@ struct PrototypeView: View {
                             disc: audioDisc, tracks: discTracks)
     }
 
-    private func chooseBackup() {
-        let panel = NSOpenPanel()
-        panel.title = "选择曲库备份"
-        panel.allowsMultipleSelection = false
-        panel.allowedContentTypes = [UTType(filenameExtension: "musiccenterbackup") ?? .data]
-        panel.begin { response in
-            if response == .OK { pendingRestore = panel.url }
-        }
+    private func didRestore() {
+        player.clearQueue()
+        player.setInitialAudio(outputUID: settings.outputDeviceUID, equalizer: equalizer, renderingRate: settings.outputSampleRate)
+        refreshAudioDisc()
+        sampleLibrary = false
+        selectPage(.songs)
     }
 
     private var mainMenuEntries: [WindowsMenuEntry] {
@@ -1679,7 +1673,9 @@ struct PrototypeView: View {
         case .backup:
             searchFocused = false
             showsBackup = true
-        case .restore: chooseBackup()
+        case .restore:
+            searchFocused = false
+            showsRestore = true
         case .settings: settingsPage = .display
         case .version: informationPage = .version
         case .system: informationPage = .system

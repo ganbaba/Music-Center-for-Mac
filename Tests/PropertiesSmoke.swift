@@ -133,22 +133,53 @@ func verifyProperties(in root: URL) async throws {
     let leftovers = try FileManager.default.contentsOfDirectory(atPath: root.path)
     try check(!leftovers.contains { $0.hasPrefix(".music-center-backup-") }, "failed backup leaves no staging file")
     let saved = library.propertyRecords
+    let candidate = try await library.inspectBackup(at: archive, preferences: prefs)
+    try check(candidate.notes == notes && candidate.createdAt != nil && candidate.trackCount == 3, "restore preview shows archive metadata")
     try library.saveProperties([PropertyChange(subject: song(0), fields: [.genre: "Changed after backup"])])
-    _ = try library.restore(from: archive, preferences: prefs)
+    prefs.dsee = false
+    let rollback = try await library.restore(candidate, preferences: prefs)
     try check(library.propertyRecords == saved, "backup restore properties")
+    try check(prefs.dsee, "backup restore applies preferences")
+    let automatic = try await library.inspectBackup(at: rollback, preferences: prefs)
+    try check(automatic.trackCount == 3 && automatic.notes == "恢复前自动备份", "automatic rollback archive is readable")
     let corrupt = root.appending(path: "corrupt.musiccenterbackup")
     try FileManager.default.copyItem(at: archive, to: corrupt)
     try sql(corrupt, "UPDATE library_properties SET data = x'00'")
     do {
-        _ = try library.restore(from: corrupt, preferences: prefs)
+        _ = try await library.inspectBackup(at: corrupt, preferences: prefs)
         throw PropertyFailure(message: "malformed backup accepted")
     } catch let failure as PropertyFailure where failure.message == "malformed backup accepted" { throw failure }
       catch {}
     try check(library.propertyRecords == saved, "malformed restore leaves current data")
+    let exchanged = root.appending(path: "exchanged.musiccenterbackup")
+    try FileManager.default.copyItem(at: archive, to: exchanged)
+    let selected = try await library.inspectBackup(at: exchanged, preferences: prefs)
+    try sql(exchanged, "UPDATE music_center_backup_details SET notes = 'changed since preview'")
+    do {
+        _ = try await library.restore(selected, preferences: prefs)
+        throw PropertyFailure(message: "changed backup passed the original confirmation")
+    } catch let failure as RestoreFailure {
+        try check(failure.message.contains("已更改"), "changed backup rejected before applying")
+    }
+    try library.saveProperties([PropertyChange(subject: song(0), fields: [.genre: "Keep on write failure"])])
+    let beforeWriteFailure = library.propertyRecords
+    let blockedPreferencesFolder = root.appending(path: "blocked-settings")
+    let blockedPreferences = PreviewPreferences(directory: blockedPreferencesFolder)
+    try Data("settings path is not a directory".utf8).write(to: blockedPreferencesFolder)
+    do {
+        _ = try await library.restore(candidate, preferences: blockedPreferences)
+        throw PropertyFailure(message: "restore ignored a settings write failure")
+    } catch let failure as RestoreFailure {
+        try check(failure.message.contains("恢复前备份"), "runtime failure reports recovery archive")
+    }
+    let afterWriteFailure = Library(directory: library.directory)
+    try check(afterWriteFailure.propertyRecords == beforeWriteFailure, "runtime write failure rolls back the actual database")
     let legacy = root.appending(path: "legacy.musiccenterbackup")
     try FileManager.default.copyItem(at: archive, to: legacy)
     try sql(legacy, "DROP TABLE library_properties; DROP TABLE music_center_backup_details")
-    _ = try library.restore(from: legacy, preferences: prefs)
+    let old = try await library.inspectBackup(at: legacy, preferences: prefs)
+    try check(old.createdAt == nil && old.notes == nil, "legacy backup works without metadata")
+    _ = try await library.restore(old, preferences: prefs)
     try check(library.propertyRecords.isEmpty && library.tracks.count == 3, "legacy backup migration")
     // A window can outlive removal of its selected entity; it must not create orphan metadata.
     let stale = song(2)

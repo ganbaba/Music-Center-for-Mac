@@ -1,10 +1,9 @@
 import AppKit
 import SwiftUI
 
-struct BackupPresentation: ViewModifier {
-    @Binding var isPresented: Bool
-    let library: Library
-    let preferences: PreviewPreferences
+struct LibraryWizardPresentation<Panel: View>: ViewModifier {
+    let isPresented: Bool
+    @ViewBuilder let panel: () -> Panel
 
     func body(content: Content) -> some View {
         content.disabled(isPresented)
@@ -16,7 +15,7 @@ struct BackupPresentation: ViewModifier {
                         let height = min(560, max(1, (geometry.size.height - 24) / scale))
                         ZStack {
                             Color(white: 0.93).opacity(0.68).contentShape(Rectangle())
-                            BackupWizard(library: library, preferences: preferences, close: { isPresented = false })
+                            panel()
                                 .frame(width: width, height: height)
                                 .scaleEffect(scale)
                                 .frame(width: width * scale, height: height * scale)
@@ -27,7 +26,80 @@ struct BackupPresentation: ViewModifier {
     }
 }
 
-private struct BackupWizard: View {
+struct LibraryWizardPanel<Contents: View, Controls: View>: View {
+    let title: String
+    var closeDisabled = false
+    let close: () -> Void
+    var failure: String? = nil
+    var dismissFailure: () -> Void = {}
+    @ViewBuilder let contents: () -> Contents
+    @ViewBuilder let controls: () -> Controls
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Text(title).frame(maxWidth: .infinity).frame(height: 48).padding(.horizontal, 42)
+                .overlay(alignment: .trailing) {
+                    Button(action: close) {
+                        Image(systemName: "xmark").font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(Color(white: 0.48)).frame(width: 36, height: 36)
+                            .contentShape(Rectangle())
+                    }.buttonStyle(.plain).disabled(closeDisabled)
+                        .padding(.trailing, 6).accessibilityLabel("关闭" + title)
+                }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 15, content: contents)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 37).padding(.vertical, 12)
+            }
+            HStack(spacing: 8) {
+                Spacer(minLength: 0)
+                controls()
+            }.padding(.horizontal, 20).padding(.vertical, 15)
+        }
+        .font(.system(size: 12)).foregroundStyle(SettingsStyle.ink)
+        .background(.white).environment(\.colorScheme, .light)
+        .disabled(failure != nil)
+        .overlay {
+            if let failure {
+                ZStack {
+                    Color.black.opacity(0.001).contentShape(Rectangle())
+                    WindowsDialog(title: "Music Center for Mac", message: failure,
+                                  width: 360, buttons: [WindowsDialogButton("ok", "确定")],
+                                  dismiss: dismissFailure)
+                }
+            }
+        }
+        .compositingGroup().shadow(color: .black.opacity(0.45), radius: 8, y: 2)
+        .accessibilityElement(children: .contain).accessibilityLabel(title + "向导")
+    }
+}
+
+struct LibraryWizardPrimary: View {
+    let title: String
+    var enabled = true
+    var isDefault = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title).foregroundStyle(.white).frame(width: 112, height: 27)
+                .background(SettingsStyle.gold.opacity(enabled ? 1 : 0.35)).contentShape(Rectangle())
+        }.buttonStyle(.plain).keyboardShortcut(isDefault ? .defaultAction : nil).disabled(!enabled)
+    }
+}
+
+struct LibraryWizardProgress: View {
+    let title: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 19) {
+            Text(title)
+            ProgressView().progressViewStyle(.linear).tint(SettingsStyle.gold).accessibilityLabel(title)
+        }
+    }
+}
+
+struct BackupWizard: View {
     private enum Page: Equatable {
         case introduction, searching, settings, ready(URL), writing, complete(URL)
     }
@@ -45,6 +117,12 @@ private struct BackupWizard: View {
     @State private var failure: String?
     @State private var stopping = false
     @State private var work: Task<Void, Never>?
+
+    init(library: Library, preferences: PreviewPreferences, close: @escaping () -> Void) {
+        self.library = library
+        self.preferences = preferences
+        self.close = close
+    }
 
     private var baseName: String {
         let text = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -68,44 +146,12 @@ private struct BackupWizard: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("数据备份")
-                .frame(maxWidth: .infinity).frame(height: 48)
-                .padding(.horizontal, 42)
-                .overlay(alignment: .trailing) {
-                    Button(action: cancel) {
-                        Image(systemName: "xmark").font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color(white: 0.48)).frame(width: 36, height: 36)
-                            .contentShape(Rectangle())
-                    }.buttonStyle(.plain).disabled(page == .writing || choosingFolder)
-                        .padding(.trailing, 6).accessibilityLabel("关闭数据备份")
-                }
-            ScrollView {
-                VStack(alignment: .leading, spacing: 15) {
-                    bodyContent
-                }.frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 37).padding(.vertical, 12)
-            }
-            HStack(spacing: 8) {
-                Spacer(minLength: 0)
-                footer
-            }.padding(.horizontal, 20).padding(.vertical, 15)
+        LibraryWizardPanel(title: "数据备份", closeDisabled: page == .writing || choosingFolder,
+                           close: cancel, failure: failure, dismissFailure: dismissFailure) {
+            bodyContent
+        } controls: {
+            footer
         }
-        .font(.system(size: 12)).foregroundStyle(SettingsStyle.ink)
-        .background(.white).environment(\.colorScheme, .light)
-        .disabled(failure != nil)
-        .overlay {
-            if let failure {
-                ZStack {
-                    Color.black.opacity(0.001).contentShape(Rectangle())
-                    WindowsDialog(title: "Music Center for Mac", message: failure,
-                                  width: 360, buttons: [WindowsDialogButton("ok", "确定")],
-                                  dismiss: dismissFailure)
-                }
-            }
-        }
-        .compositingGroup().shadow(color: .black.opacity(0.45), radius: 8, y: 2)
-        .accessibilityElement(children: .contain).accessibilityLabel("数据备份向导")
         .onExitCommand {
             if failure != nil { dismissFailure() } else { cancel() }
         }
@@ -121,7 +167,7 @@ private struct BackupWizard: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("点击「下一步」估算备份大小。")
         case .searching:
-            progress("正在估算备份大小…")
+            LibraryWizardProgress(title: "正在估算备份大小…")
         case .settings:
             Text("备份数据大小：约 " + sizeLabel)
             VStack(alignment: .leading, spacing: 5) {
@@ -156,7 +202,7 @@ private struct BackupWizard: View {
             Text("备份数据保存地址：\(url.path)")
                 .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
         case .writing:
-            progress(stopping ? "正在停止备份…" : "正在备份数据…")
+            LibraryWizardProgress(title: stopping ? "正在停止备份…" : "正在备份数据…")
             Text("备份期间请保持目标磁盘连接。")
         case let .complete(url):
             Text("备份已完成。")
@@ -168,41 +214,26 @@ private struct BackupWizard: View {
     @ViewBuilder private var footer: some View {
         switch page {
         case .introduction:
-            primary("下一步", action: estimate)
+            LibraryWizardPrimary(title: "下一步", action: estimate)
             SettingsAction("取消", action: cancel)
         case .searching:
             SettingsAction("取消", action: cancel)
         case .settings:
-            primary("下一步", enabled: destination != nil && !choosingFolder, action: prepare)
+            LibraryWizardPrimary(title: "下一步", enabled: destination != nil && !choosingFolder, action: prepare)
             SettingsAction("取消", action: cancel).disabled(choosingFolder)
         case let .ready(url):
             SettingsAction("后退") { page = .settings }
-            primary("开始") { start(url) }
+            LibraryWizardPrimary(title: "开始") { start(url) }
             SettingsAction("取消", action: cancel)
         case .writing:
             SettingsAction("停止", action: cancel).disabled(stopping || work == nil)
         case .complete:
-            primary("确定", action: close)
+            LibraryWizardPrimary(title: "确定", action: close)
         }
     }
 
     private var sizeLabel: String {
         size.map { ByteCountFormatter.string(fromByteCount: $0, countStyle: .file) } ?? "—"
-    }
-
-    private func progress(_ title: String) -> some View {
-        VStack(alignment: .leading, spacing: 19) {
-            Text(title)
-            ProgressView().progressViewStyle(.linear).tint(SettingsStyle.gold)
-                .accessibilityLabel(title)
-        }
-    }
-
-    private func primary(_ title: String, enabled: Bool = true, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).foregroundStyle(.white).frame(width: 112, height: 27)
-                .background(SettingsStyle.gold.opacity(enabled ? 1 : 0.35)).contentShape(Rectangle())
-        }.buttonStyle(.plain).keyboardShortcut(.defaultAction).disabled(!enabled)
     }
 
     private func chooseFolder() {

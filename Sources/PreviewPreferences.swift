@@ -45,18 +45,31 @@ final class PreviewPreferences {
     }
 
     func writeSnapshot(_ data: Data) throws {
+        try Self.persist(data, at: url, keepPrevious: needsBackup)
+        needsBackup = false
+    }
+
+    func restorationWriter() -> @Sendable (Data, Bool) throws -> Void {
+        let file = url
+        let keepPrevious = needsBackup
+        return { data, restoring in
+            try Self.persist(data, at: file, keepPrevious: restoring && keepPrevious)
+        }
+    }
+
+    private nonisolated static func persist(_ data: Data, at url: URL, keepPrevious: Bool) throws {
         try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if needsBackup {
+        if keepPrevious {
             do {
                 let previous = try Data(contentsOf: url)
                 try previous.write(to: url.appendingPathExtension("backup"), options: .atomic)
             } catch CocoaError.fileReadNoSuchFile {}
-            needsBackup = false
         }
         try data.write(to: url, options: .atomic)
     }
 
     func applySnapshot(_ saved: SavedPreferences) {
+        needsBackup = false
         loaded = false
         defer { loaded = true }
         settings = saved.settings
