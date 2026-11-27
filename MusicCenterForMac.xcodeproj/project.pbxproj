@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1D3A7002026112750000002 /* ATRACWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112760000002 /* ATRACWizard.swift */; };
+		A1D3A7002026112750000001 /* ATRACConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112760000001 /* ATRACConversion.swift */; };
 		A1D3A7002026112550000001 /* InformationPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112560000001 /* InformationPanels.swift */; };
 		A1D3A7002026112650000001 /* BackupWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112660000001 /* BackupWizard.swift */; };
 		A1D3A7002026112650000002 /* RestoreWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D3A7002026112660000002 /* RestoreWizard.swift */; };
@@ -40,6 +42,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A1D3A7002026112760000002 /* ATRACWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ATRACWizard.swift; sourceTree = "<group>"; };
+		A1D3A7002026112760000001 /* ATRACConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ATRACConversion.swift; sourceTree = "<group>"; };
 		A1D3A7002026112560000001 /* InformationPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InformationPanels.swift; sourceTree = "<group>"; };
 		A1D3A7002026112660000001 /* BackupWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupWizard.swift; sourceTree = "<group>"; };
 		A1D3A7002026112660000002 /* RestoreWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestoreWizard.swift; sourceTree = "<group>"; };
@@ -101,6 +105,8 @@
 				A1D3A7002026112560000001 /* InformationPanels.swift */,
 				A1D3A7002026112660000001 /* BackupWizard.swift */,
 				A1D3A7002026112660000002 /* RestoreWizard.swift */,
+				A1D3A7002026112760000002 /* ATRACWizard.swift */,
+				A1D3A7002026112760000001 /* ATRACConversion.swift */,
 				A1D3A7002026112540000001 /* WindowsMenu.swift */,
 				A1D3A7002026112520000001 /* LibraryProperties.swift */,
 				2BFE03155F660367989C9B50 /* TrackMenu.swift */,
@@ -221,6 +227,8 @@
 				A1D3A7002026112550000001 /* InformationPanels.swift in Sources */,
 				A1D3A7002026112650000001 /* BackupWizard.swift in Sources */,
 				A1D3A7002026112650000002 /* RestoreWizard.swift in Sources */,
+				A1D3A7002026112750000002 /* ATRACWizard.swift in Sources */,
+				A1D3A7002026112750000001 /* ATRACConversion.swift in Sources */,
 				A1D3A7002026112530000001 /* WindowsMenu.swift in Sources */,
 				A1D3A7002026112510000001 /* LibraryProperties.swift in Sources */,
 				80727E0AF47B09D83944A5F2 /* TrackMenu.swift in Sources */,

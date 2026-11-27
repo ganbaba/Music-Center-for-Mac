@@ -32,7 +32,9 @@ struct LibraryWizardPanel<Contents: View, Controls: View>: View {
     var headerHeight: CGFloat = 60
     var contentInset: CGFloat = 50
     var contentTop: CGFloat = 20
+    var contentTrailingInset: CGFloat = 40
     var fontSize: CGFloat = 14
+    var closeTrailingInset: CGFloat = 6
     var closeDisabled = false
     let close: () -> Void
     var failure: String? = nil
@@ -49,12 +51,12 @@ struct LibraryWizardPanel<Contents: View, Controls: View>: View {
                             .foregroundStyle(Color(white: closeDisabled ? 0.83 : 0.48)).frame(width: 36, height: 36)
                             .contentShape(Rectangle())
                     }.buttonStyle(.plain).keyboardShortcut(.cancelAction).disabled(closeDisabled)
-                        .padding(.trailing, 6).accessibilityLabel("关闭" + title)
+                        .padding(.trailing, closeTrailingInset).accessibilityLabel("关闭" + title)
                 }
             ScrollView {
                 VStack(alignment: .leading, spacing: 15, content: contents)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.leading, contentInset).padding(.trailing, 40)
+                    .padding(.leading, contentInset).padding(.trailing, contentTrailingInset)
                     .padding(.top, contentTop).padding(.bottom, 12)
             }
             HStack(spacing: 8) {

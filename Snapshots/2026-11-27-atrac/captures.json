@@ -1,0 +1,309 @@
+[
+  {
+    "file": "mac/introduction.jpg",
+    "state": "introduction",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "a379a4e6455c27eeb10f1cf87fcaa4fc292e5099204f630e4eb9af94419c2b8e",
+    "name": "介绍",
+    "result": "按原图组织说明与下一页入口；空闲 Escape 关闭已验证。",
+    "reference_sha256": "e0e1ad4a8b87cc7f8be17b3feb039da943d7eb6fe2cdf09589d1f3853ddbf7ea",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/options-empty.jpg",
+    "state": "options-empty",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "b54c7f6e52fdf1576251692f9815be71b33b3c54f5e315220a305263093e26f2",
+    "name": "初始选项",
+    "result": "格式和原文件操作均未选择，下一页禁用。",
+    "reference_sha256": "4dfcf7998a94e47bf7f2c61e0ef2c2a4a4e136be9dba9c2e05e1e3ac53e73d63",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/aac-keep.jpg",
+    "state": "aac-keep",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/07-aac-keep-original.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c774cb8e02f7e66afee05179d25da0d2018d454604860fda2fcd791ccdfa6428",
+    "name": "AAC 与保留原文件",
+    "result": "真实选择 AAC，保留原始位置。",
+    "reference_sha256": "3c3978079a6cc40094901e408c7367850193c3175f46b559a30dbe8a030e9f72",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/aac-ready.jpg",
+    "state": "aac-ready",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/11-space-check-ready-to-start.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c77bd9c23e3d42e7a9d94b9c611b543411ccc3d04083e4aa7697773dc2de2c27",
+    "name": "AAC 空间确认",
+    "result": "显示实际 Mac 卷容量和保守空间估算；Return 不开始。",
+    "reference_sha256": "b66220f895196db2a0fa4113e5341f46c0ff05f9fa71ad5608a16dd328d93204",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/aac-progress.jpg",
+    "state": "aac-progress",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c021f1fd87ffe1177714402c5f6ba1eea2a675a41fb1ffb634da88672775ddb4",
+    "name": "AAC 实际进度",
+    "result": "正在运行真实解码和转换；按完成文件数计数。Windows 参考为 FLAC 进度布局，数据不同。",
+    "reference_sha256": "8b48505f21695091993dd4c5532d3c8d95d844c11ea32815f35a0b862472402d",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/aac-complete.jpg",
+    "state": "aac-complete",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/12-aac-completed.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "6cf449e24f00067847e5297917d5c3f37fc3a50cea05eaa89676e77523476930",
+    "name": "AAC 完成",
+    "result": "实际生成 M4A，原曲目路径更新。",
+    "reference_sha256": "31396aa9ddcc945129ec57116db15706b7b23e23de4da8924a70d1bf978d6564",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/no-atrac.jpg",
+    "state": "no-atrac",
+    "reference": "Reference-Windows-2026-11-24/capture/06-dialogs/atrac-scan-result.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "10d516344646be0416964c14f4123b13f98b7bccbd9eb80adb38b6f215473758",
+    "name": "未找到 ATRAC",
+    "result": "已转换的曲目不再计为 ATRAC；原文件仍可保留在磁盘。",
+    "reference_sha256": "60a76984e8aa08b1b681dd53a4135edf81aa83c49657e102344842974067ec80",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/move-empty.jpg",
+    "state": "move-empty",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "a7e1db079506b776931f87472d1b2b5c16a2ab77e0a7b1a846c68d8ccd66884e",
+    "name": "移动选项空目标",
+    "result": "移动选项启用浏览，未选目录时下一页禁用。",
+    "reference_sha256": "1f2f4216f25c47ec32f83a7395e4ed039f8025f13dc1ba91e95dbc5ecc81d4f2",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/flac-move-selected.jpg",
+    "state": "flac-move-selected",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "84265b22366df44fa6c2d5410945a9b297caa3f4c75b0bbe1846114b2c998dfb",
+    "name": "FLAC 与移动原文件",
+    "result": "选择真实临时目标目录；动态路径与原图不同。",
+    "reference_sha256": "1f2f4216f25c47ec32f83a7395e4ed039f8025f13dc1ba91e95dbc5ecc81d4f2",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/flac-ready.jpg",
+    "state": "flac-ready",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/14-flac-ready-to-start.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "76a0b9ee38609a2f125726db46de49947d710499b9abb4e01ac6d9741e6211b1",
+    "name": "FLAC 空间确认",
+    "result": "真实容量预检，来源和目标空间均计入估算。",
+    "reference_sha256": "1f980259a6fc0cd4b9ce9bd929fad987b2f87c0125eac8c87320042ae5491bec",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/flac-progress.jpg",
+    "state": "flac-progress",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "59e0e3cf5b61ee6148094b3b8bfe8927686ccd1f4c520271891996e774768bd3",
+    "name": "FLAC 实际进度",
+    "result": "真实转换任务，不使用原图 100% 数字。",
+    "reference_sha256": "8b48505f21695091993dd4c5532d3c8d95d844c11ea32815f35a0b862472402d",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/flac-complete.jpg",
+    "state": "flac-complete",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/15-flac-completed.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "6cf449e24f00067847e5297917d5c3f37fc3a50cea05eaa89676e77523476930",
+    "name": "FLAC 完成",
+    "result": "实际输出 FLAC，原文件复制校验并在提交后移出。",
+    "reference_sha256": "60d763ffc9226a82123103b7027a11a2c3a9b811c814f4b4beb6defeacacc4f8",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/flac-keep.jpg",
+    "state": "flac-keep",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/08-flac-keep-original.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "505868e92ff8f9226d629b8d9a12be6d7098896287eeee159ff153b026b37258",
+    "name": "FLAC 与保留原文件",
+    "result": "按原图选择 FLAC 和勿移出原始文件夹。",
+    "reference_sha256": "ca863475f5aab58ee40d912d70e191ef34702852f40dbd3cc21405b840d37cb7",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  },
+  {
+    "file": "mac/stopped.jpg",
+    "state": "stopped",
+    "reference": null,
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "fc8de582279afbf5afa012a01d859e442f11e3054bf93cf4d867cd07e2095b20",
+    "name": "停止结果",
+    "result": "停止真实 FFmpeg 进程，未提交输出清理；尚无对应 Windows 停止结果参考。"
+  },
+  {
+    "file": "mac/partial-failure.jpg",
+    "state": "partial-failure",
+    "reference": null,
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "de7fdab14115b260387ef6f7f766c9d17af19e2084e68ef7532fc432316a9e5e",
+    "name": "部分失败",
+    "result": "同批有效源转换成功、无效源解码失败，保留未转换源。"
+  },
+  {
+    "file": "mac/failure-details.jpg",
+    "state": "failure-details",
+    "reference": null,
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "1658cd8f6f8f8b3caac84ca5e7a2cce5c1ce426a7803742fbb7456dae8de7abd",
+    "name": "失败详情",
+    "result": "显示真实子进程返回内容；不借用 Windows 导入错误图。"
+  },
+  {
+    "file": "mac/compact.jpg",
+    "state": "compact",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "11a50acaf7c53193babf7e142f19d92121ba9d95e5b2fe2a01586c13a25bc810",
+    "name": "紧凑窗口",
+    "result": "正文滚动，底部按钮固定；原图用于正常布局对照。",
+    "reference_sha256": "4dfcf7998a94e47bf7f2c61e0ef2c2a4a4e136be9dba9c2e05e1e3ac53e73d63",
+    "reference_size": [
+      2732,
+      1536
+    ],
+    "reference_crop": [
+      786,
+      112,
+      1160,
+      1280
+    ]
+  }
+]

@@ -1,5 +1,9 @@
 # Music Center for Mac
 
+## 2026-11-27 ATRAC 向导
+
+“工具 → 批量转化ATRAC”已有按 Windows 原图组织的完整向导：扫描实际曲库，选择 AAC／FLAC、保留或移动原文件，检查空间，再执行转换。成功后保留曲目 ID 和播放列表关系并更新路径，支持停止及逐文件错误详情。真实音频与界面验证、平台差异和图集见[本轮快照](Snapshots/2026-11-27-atrac/README.md)。
+
 ## 2026-11-27 备份恢复逐状态验收
 
 按 Windows 原图统一两个向导的面板、字段、按钮与各阶段布局，修复 Escape 关闭及确认页 Return 保护，保存 20 个实际状态截图和可重跑的独立 QA。见[本轮验收说明](Snapshots/2026-11-27-wizard-audit/README.md)和[Windows / Mac 并排图集](Snapshots/2026-11-27-wizard-audit/gallery.html)。原生选择器、真实进度及恢复停止能力等差异和缺失参考已逐项记录。
@@ -179,7 +183,7 @@ Windows 2.7.4 对照图见 `Reference/queue-*.png` 和 `Reference/library-*.png`
 
 打开侧栏「CD」可读取 macOS 已挂载的音频 CD。选中曲目或整张导入，文件复制到所选文件夹后登记到曲库。CD 导入设置提供光驱选择、插盘操作、WAV／MP3／AAC／FLAC、80 分钟容量估算和自动弹出。AAC 可选 320、256、192、160、128、96、80 kbps；MP3 可选 320、256、224、192、160、128、112、96 kbps。MP3 需要带 libmp3lame 编码器的 FFmpeg。插盘默认无操作，可设置自动播放，或选择目标文件夹后自动导入。校验模式在转换前复制并比对光盘源文件。本机未连接光驱，导入流程使用 AIFF 测试文件验证。
 
-「工具 → 批量转化ATRAC」使用已有的 FFmpeg 解码 OMA、AA3 或 AT3，再导出 FLAC。当前主机没有 FFmpeg。
+「工具 → 批量转化ATRAC」扫描曲库中的 OMA、AA3、AT3，使用本机 FFmpeg 解码并转换为 AAC 或 FLAC。可保留原文件或移动至指定文件夹，成功后更新原曲目路径并保留曲库关系。没有找到 FFmpeg 时，向导会提示选择本机可执行文件；不会自动安装。转换仅支持解码器能读取的音频。完整范围和实际验证见 [ATRAC 快照](Snapshots/2026-11-27-atrac/README.md)。
 
 CD 页的「查找专辑信息」继续使用公开的 MusicBrainz API，点击搜索会发送输入的专辑名称，并可在确认匹配后应用信息。歌曲菜单已还原为 Windows 的「获取未知属性」，目前说明 Gracenote 服务未接入，不把手动查专辑冒充自动识别。Sony 软件更新、DSEE HX 音频处理和数据库共享还未接入。
 

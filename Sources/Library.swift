@@ -143,6 +143,23 @@ final class Library {
         if update({ try $0.insert(converted) }) { message = "已导入 \(files.count) 首 CD 曲目。" }
     }
 
+    func replaceConvertedAudio(_ source: Track, with output: URL, duration: Double) throws {
+        guard !importing, !restoring, let database else {
+            throw ATRACConversion.Failure(message: "曲库正在使用，请稍后重试。")
+        }
+        try database.replaceConvertedAudio(source, with: output, duration: duration)
+        // The database has committed. Update the two changed values without a second fallible
+        // database read, so the caller never removes an output that the database already references.
+        tracks = tracks.map { current in
+            guard current.id == source.id else { return current }
+            return Track(id: current.id, url: output.standardizedFileURL.resolvingSymlinksInPath(),
+                         title: current.title, artist: current.artist, album: current.album, duration: duration,
+                         albumArtist: current.albumArtist, disc: current.disc, number: current.number,
+                         artwork: current.artwork, registeredAt: current.registeredAt)
+        }
+        message = "已更新转换后的曲目。"
+    }
+
     func importPlaylist(_ url: URL) async -> Bool {
         guard !importing, !restoring else { return false }
         importing = true
@@ -565,7 +582,7 @@ enum M3UPlaylist {
 }
 
 enum TrackScanner {
-    private static let supported = Set(["mp3", "m4a", "aac", "flac", "wav", "wave", "aif", "aiff", "aifc", "caf"])
+    private static let supported = Set(["mp3", "m4a", "aac", "flac", "wav", "wave", "aif", "aiff", "aifc", "caf", "oma", "aa3", "at3"])
     private static let keys: Set<URLResourceKey> = [.isDirectoryKey, .isRegularFileKey]
 
     static func scan(_ inputs: [URL]) async -> [Track] {
@@ -892,6 +909,17 @@ private final class LibraryDatabase {
         let registeredAt = Date.now
         try transaction {
             for track in tracks { try insertTrack(track, registeredAt: registeredAt) }
+        }
+    }
+
+    func replaceConvertedAudio(_ source: Track, with output: URL, duration: Double) throws {
+        try transaction {
+            try execute("UPDATE tracks SET path = ?, duration = ? WHERE id = ? AND path = ?",
+                        [.text(output.standardizedFileURL.resolvingSymlinksInPath().path), .number(duration),
+                         .uuid(source.id), .text(source.url.path)])
+            guard sqlite3_changes(connection) == 1 else {
+                throw Failure(message: "曲目在转换期间已更改，请重新扫描。")
+            }
         }
     }
 

@@ -1,0 +1,79 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ATRAC · Windows / Mac · 2026-11-27</title><style>
+body{font-family:system-ui,sans-serif;background:#f3f3f3;color:#222;max-width:1400px;margin:32px auto;padding:0 20px}
+h1{font-size:26px}nav{display:flex;gap:10px;flex-wrap:wrap}a{color:#705416}article{background:white;padding:20px;margin:32px 0;border:1px solid #ddd}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0}figcaption{font-weight:600;margin-bottom:10px}
+.mac{display:block;width:100%;height:auto;border:1px solid #ddd}.frame{position:relative;aspect-ratio:580/640;overflow:hidden;background:#eee;border:1px solid #ddd}
+.frame img{position:absolute;width:235.5172413793%;left:-67.7586206897%;top:-8.75%}.missing{padding:30px;background:#eee}
+@media(max-width:800px){.pair{grid-template-columns:1fr}}</style><h1>ATRAC 向导 · 2026-11-27</h1>
+<p>17 个实际状态已完成，解码器选择器补验待完成。</p><p>左侧为生产视图在隔离 QA 的实际截图，右侧为 Windows 原图的面板区域。点击图片查看完整图片。<a href="README.md">能力、差异和实际验证说明</a>。</p><nav>
+<a href="#introduction">介绍</a>
+<a href="#options-empty">初始选项</a>
+<a href="#aac-keep">AAC 与保留原文件</a>
+<a href="#aac-ready">AAC 空间确认</a>
+<a href="#aac-progress">AAC 实际进度</a>
+<a href="#aac-complete">AAC 完成</a>
+<a href="#no-atrac">未找到 ATRAC</a>
+<a href="#move-empty">移动选项空目标</a>
+<a href="#flac-move-selected">FLAC 与移动原文件</a>
+<a href="#flac-ready">FLAC 空间确认</a>
+<a href="#flac-progress">FLAC 实际进度</a>
+<a href="#flac-complete">FLAC 完成</a>
+<a href="#flac-keep">FLAC 与保留原文件</a>
+<a href="#stopped">停止结果</a>
+<a href="#partial-failure">部分失败</a>
+<a href="#failure-details">失败详情</a>
+<a href="#compact">紧凑窗口</a>
+</nav>
+<article id="introduction"><h2>介绍</h2><p>按原图组织说明与下一页入口；空闲 Escape 关闭已验证。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/introduction.jpg"><img class="mac" loading="lazy" src="mac/introduction.jpg" alt="介绍"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg" alt="Windows 介绍"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg</small></p>
+</figure></div></article>
+<article id="options-empty"><h2>初始选项</h2><p>格式和原文件操作均未选择，下一页禁用。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/options-empty.jpg"><img class="mac" loading="lazy" src="mac/options-empty.jpg" alt="初始选项"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg" alt="Windows 初始选项"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg</small></p>
+</figure></div></article>
+<article id="aac-keep"><h2>AAC 与保留原文件</h2><p>真实选择 AAC，保留原始位置。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/aac-keep.jpg"><img class="mac" loading="lazy" src="mac/aac-keep.jpg" alt="AAC 与保留原文件"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/07-aac-keep-original.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/07-aac-keep-original.jpg" alt="Windows AAC 与保留原文件"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/07-aac-keep-original.jpg</small></p>
+</figure></div></article>
+<article id="aac-ready"><h2>AAC 空间确认</h2><p>显示实际 Mac 卷容量和保守空间估算；Return 不开始。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/aac-ready.jpg"><img class="mac" loading="lazy" src="mac/aac-ready.jpg" alt="AAC 空间确认"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/11-space-check-ready-to-start.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/11-space-check-ready-to-start.jpg" alt="Windows AAC 空间确认"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/11-space-check-ready-to-start.jpg</small></p>
+</figure></div></article>
+<article id="aac-progress"><h2>AAC 实际进度</h2><p>正在运行真实解码和转换；按完成文件数计数。Windows 参考为 FLAC 进度布局，数据不同。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/aac-progress.jpg"><img class="mac" loading="lazy" src="mac/aac-progress.jpg" alt="AAC 实际进度"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg" alt="Windows AAC 实际进度"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg</small></p>
+</figure></div></article>
+<article id="aac-complete"><h2>AAC 完成</h2><p>实际生成 M4A，原曲目路径更新。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/aac-complete.jpg"><img class="mac" loading="lazy" src="mac/aac-complete.jpg" alt="AAC 完成"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/12-aac-completed.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/12-aac-completed.jpg" alt="Windows AAC 完成"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/12-aac-completed.jpg</small></p>
+</figure></div></article>
+<article id="no-atrac"><h2>未找到 ATRAC</h2><p>已转换的曲目不再计为 ATRAC；原文件仍可保留在磁盘。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/no-atrac.jpg"><img class="mac" loading="lazy" src="mac/no-atrac.jpg" alt="未找到 ATRAC"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-24/capture/06-dialogs/atrac-scan-result.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-24/capture/06-dialogs/atrac-scan-result.jpg" alt="Windows 未找到 ATRAC"></div></a><p><small>Reference-Windows-2026-11-24/capture/06-dialogs/atrac-scan-result.jpg</small></p>
+</figure></div></article>
+<article id="move-empty"><h2>移动选项空目标</h2><p>移动选项启用浏览，未选目录时下一页禁用。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/move-empty.jpg"><img class="mac" loading="lazy" src="mac/move-empty.jpg" alt="移动选项空目标"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg" alt="Windows 移动选项空目标"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg</small></p>
+</figure></div></article>
+<article id="flac-move-selected"><h2>FLAC 与移动原文件</h2><p>选择真实临时目标目录；动态路径与原图不同。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/flac-move-selected.jpg"><img class="mac" loading="lazy" src="mac/flac-move-selected.jpg" alt="FLAC 与移动原文件"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg" alt="Windows FLAC 与移动原文件"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/09-move-original-controls-enabled.jpg</small></p>
+</figure></div></article>
+<article id="flac-ready"><h2>FLAC 空间确认</h2><p>真实容量预检，来源和目标空间均计入估算。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/flac-ready.jpg"><img class="mac" loading="lazy" src="mac/flac-ready.jpg" alt="FLAC 空间确认"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/14-flac-ready-to-start.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/14-flac-ready-to-start.jpg" alt="Windows FLAC 空间确认"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/14-flac-ready-to-start.jpg</small></p>
+</figure></div></article>
+<article id="flac-progress"><h2>FLAC 实际进度</h2><p>真实转换任务，不使用原图 100% 数字。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/flac-progress.jpg"><img class="mac" loading="lazy" src="mac/flac-progress.jpg" alt="FLAC 实际进度"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg" alt="Windows FLAC 实际进度"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/16-flac-progress-100-unfilled.jpg</small></p>
+</figure></div></article>
+<article id="flac-complete"><h2>FLAC 完成</h2><p>实际输出 FLAC，原文件复制校验并在提交后移出。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/flac-complete.jpg"><img class="mac" loading="lazy" src="mac/flac-complete.jpg" alt="FLAC 完成"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/15-flac-completed.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/15-flac-completed.jpg" alt="Windows FLAC 完成"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/15-flac-completed.jpg</small></p>
+</figure></div></article>
+<article id="flac-keep"><h2>FLAC 与保留原文件</h2><p>按原图选择 FLAC 和勿移出原始文件夹。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/flac-keep.jpg"><img class="mac" loading="lazy" src="mac/flac-keep.jpg" alt="FLAC 与保留原文件"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/08-flac-keep-original.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/08-flac-keep-original.jpg" alt="Windows FLAC 与保留原文件"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/08-flac-keep-original.jpg</small></p>
+</figure></div></article>
+<article id="stopped"><h2>停止结果</h2><p>停止真实 FFmpeg 进程，未提交输出清理；尚无对应 Windows 停止结果参考。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/stopped.jpg"><img class="mac" loading="lazy" src="mac/stopped.jpg" alt="停止结果"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<div class="missing">当前没有对应的 Windows 实际结果原图。本图来自 Mac 实测，不以其他错误状态代替。</div>
+</figure></div></article>
+<article id="partial-failure"><h2>部分失败</h2><p>同批有效源转换成功、无效源解码失败，保留未转换源。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/partial-failure.jpg"><img class="mac" loading="lazy" src="mac/partial-failure.jpg" alt="部分失败"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<div class="missing">当前没有对应的 Windows 实际结果原图。本图来自 Mac 实测，不以其他错误状态代替。</div>
+</figure></div></article>
+<article id="failure-details"><h2>失败详情</h2><p>显示真实子进程返回内容；不借用 Windows 导入错误图。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/failure-details.jpg"><img class="mac" loading="lazy" src="mac/failure-details.jpg" alt="失败详情"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<div class="missing">当前没有对应的 Windows 实际结果原图。本图来自 Mac 实测，不以其他错误状态代替。</div>
+</figure></div></article>
+<article id="compact"><h2>紧凑窗口</h2><p>正文滚动，底部按钮固定；原图用于正常布局对照。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/compact.jpg"><img class="mac" loading="lazy" src="mac/compact.jpg" alt="紧凑窗口"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg" alt="Windows 紧凑窗口"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg</small></p>
+</figure></div></article>
+</html>

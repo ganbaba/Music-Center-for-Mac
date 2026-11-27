@@ -1,0 +1,12 @@
+Date: 2026-11-27 (Asia/Hong_Kong)
+Production and QA Release: BUILD SUCCEEDED
+Production and QA strict codesign verification: PASS
+Properties/backup/restore regression: PASS
+Real ATRAC import, AAC/FLAC and PCM equality regression: PASS
+Move/keep originals, collision, stale entity, corrupt input, process cancellation: PASS
+17 production UI states captured; source image/reference SHA256 and gallery links: PASS
+QA matches final production sources except its isolated app host: PASS
+Project plist, Python syntax and git diff checks: PASS
+Native decoder chooser supplemental UI check: PENDING (macOS session locked)
+Snapshot scope: implementation, backend regression and 17 UI states; native decoder supplemental UI check remains pending
+No installed app or production-library changes

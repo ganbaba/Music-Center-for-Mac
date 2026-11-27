@@ -1,0 +1,8 @@
+{
+  "sample_url": "https://samples.ffmpeg.org/A-codecs/ATRAC3%2B/at3p_sample1.oma",
+  "sample_sha256": "3b65c6354fa99df436ccd43629faf89f031bdbe516b3da6749a600193855d4d3",
+  "wheel": "imageio_ffmpeg-0.8.1-py3-none-macosx_12_0_arm64.whl",
+  "wheel_url": "https://files.pythonhosted.org/packages/2b/47/9f9b654f853598bae0850fa22bba168103e45d31b5a2a893ed474f28d54a/imageio_ffmpeg-0.8.1-py3-none-macosx_12_0_arm64.whl",
+  "wheel_sha256": "5636d691e36e5274b13fe38182b1f627b2e35dcecc63944012c2470f9484fc45",
+  "decoder_sha256": "591260c945d0eef150e3bf82b0ef988bd36a9cecc18ff05d6679617159f0a95e"
+}

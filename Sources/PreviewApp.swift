@@ -6,7 +6,7 @@ enum LibraryImport {
 
     var contentTypes: [UTType] {
         switch self {
-        case .files: [.audio]
+        case .files: [.audio] + ["oma", "aa3", "at3"].map { UTType(filenameExtension: $0) ?? .data }
         case .folder: [.folder]
         case .playlist: ["m3u", "m3u8"].compactMap { UTType(filenameExtension: $0) }
         }

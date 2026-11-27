@@ -1,0 +1,32 @@
+MAIN AUDIT (17 states completed; native Cancel lookup failed)
+CAPTURE introduction
+CAPTURE options-empty
+CAPTURE aac-keep
+CAPTURE aac-ready
+CAPTURE aac-progress
+CAPTURE aac-complete
+CAPTURE no-atrac
+CAPTURE move-empty
+CAPTURE flac-move-selected
+CAPTURE flac-ready
+CAPTURE flac-progress
+CAPTURE flac-complete
+CAPTURE flac-keep
+CAPTURE stopped
+CAPTURE partial-failure
+CAPTURE failure-details
+CAPTURE compact
+Traceback (most recent call last):
+  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 136, in <module>
+    visible('转换 ATRAC 需要本机 FFmpeg');press('取消');visible('选择要转换的文件类型')
+  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 31, in press
+    raise AssertionError('cannot press '+label)
+AssertionError: cannot press 取消
+
+SUPPLEMENTAL DECODER CHECK
+Traceback (most recent call last):
+  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 142, in <module>
+    press('加入损坏文件');time.sleep(.5)
+  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 31, in press
+    raise AssertionError('cannot press '+label)
+AssertionError: cannot press 加入损坏文件

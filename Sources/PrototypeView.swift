@@ -65,6 +65,8 @@ struct PrototypeView: View {
     @State private var playlistDraftTracks: [Track] = []
     @State private var playlistDetailID: UUID?
     @State private var showsRestore = false
+    @State private var showsATRAC = false
+    private let atracDecoder: URL?
     @State private var pendingPlaylistDeletion: Playlist?
     @State private var pendingTrackDeletion: Set<UUID> = []
     @State private var playlistsShowGrid = true
@@ -95,7 +97,7 @@ struct PrototypeView: View {
     private var canSelectTracks: Bool { !showsManagement && !capturedTracks.isEmpty }
     private var canClearTrackSelection: Bool { !showsManagement && !selectedTracks.isEmpty }
     private var menuIsBlocked: Bool {
-        showsBackup || showsRestore || library.restoring || informationPage != nil || settingsPage != nil
+        showsBackup || showsRestore || showsATRAC || library.restoring || informationPage != nil || settingsPage != nil
             || audioPanel == .equalizer || transferRequest != nil || exportRequest != nil
             || showsImporter || showsPlaylistPrompt || properties != nil || pendingPlaylistDeletion != nil
             || !pendingTrackDeletion.isEmpty || notice != nil || classificationMessage != nil
@@ -106,12 +108,14 @@ struct PrototypeView: View {
 
     init(page: LibraryPage = .songs, showsDevice: Bool = false,
          sampleLibrary: Binding<Bool>, sampleDevice: Binding<Bool>,
-         library: Library, player: Player, importer: Binding<LibraryImport?>, preferences: PreviewPreferences) {
+         library: Library, player: Player, importer: Binding<LibraryImport?>, preferences: PreviewPreferences,
+         atracDecoder: URL? = AudioCommand.ffmpeg) {
         _page = State(initialValue: page)
         _showsDevice = State(initialValue: showsDevice)
         _sampleLibrary = sampleLibrary
         _sampleDevice = sampleDevice
         self.library = library
+        self.atracDecoder = atracDecoder
         self.player = player
         _importer = importer
         self.preferences = preferences
@@ -320,6 +324,7 @@ struct PrototypeView: View {
         .onChange(of: sampleLibrary) { trackSelection = [] }
         .onChange(of: library.tracks, initial: true) { _, tracks in
             localRows = tracks.map(CapturedTrack.init)
+            player.refreshMetadata(tracks)
         }
         .onChange(of: importer) {
             guard importer != nil else { return }
@@ -373,6 +378,9 @@ struct PrototypeView: View {
             }
         })
         .modifier(WindowsMenuHost(isPresented: $showsMenu, resetID: "\(page.rawValue)-\(menuIsBlocked)-\(sampleLibrary)"))
+        .modifier(LibraryWizardPresentation(isPresented: showsATRAC, width: 580, preferredHeight: 640) {
+            ATRACWizard(library: library, decoder: atracDecoder, close: { showsATRAC = false })
+        })
     }
 
     private func openPlaylistPrompt(tracks: [Track] = []) {
@@ -1520,28 +1528,6 @@ struct PrototypeView: View {
         }
     }
 
-    private func chooseATRAC() {
-        guard let decoder = AudioCommand.ffmpeg else {
-            notice = "ATRAC 转换需要本机的 FFmpeg。"
-            return
-        }
-        let panel = NSOpenPanel()
-        panel.title = "选择 ATRAC 音频"
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = ["oma", "aa3", "at3"].map { UTType(filenameExtension: $0) ?? .data }
-        panel.begin { response in
-            guard response == .OK else { return }
-            let tracks = panel.urls.filter { ["oma", "aa3", "at3"].contains($0.pathExtension.lowercased()) }.map { url in
-                Track(id: UUID(), url: url, title: url.deletingPathExtension().lastPathComponent, artist: "", album: "",
-                      duration: nil, albumArtist: "", disc: nil, number: nil, artwork: nil)
-            }
-            guard !tracks.isEmpty else { notice = "请选择 ATRAC 音频文件。"; return }
-            chooseExportDirectory(title: "选择无损转换文件夹") { directory in
-                exportRequest = .init(tracks: tracks, directory: directory, format: .flac, decoder: decoder)
-            }
-        }
-    }
-
     private func showDiscLookup() {
         guard let audioDisc, !discTracks.isEmpty else { return }
         albumLookup = .init(title: audioDisc.name == "Audio CD" ? "" : audioDisc.name,
@@ -1669,7 +1655,7 @@ struct PrototypeView: View {
         case .mute: player.toggleMute()
         case .eject: ejectAudioDisc()
         case .lookupCD: showDiscLookup()
-        case .atrac: chooseATRAC()
+        case .atrac: showsATRAC = true
         case .backup:
             searchFocused = false
             showsBackup = true

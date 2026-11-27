@@ -1,0 +1,3 @@
+PASS · ATRAC 验证
+PASS: real ATRAC import, AAC/FLAC audio, lossless PCM equality, keep/move originals, collision preservation, stable IDs/properties/duplicate playlist entries, reopen, corrupt input, failed commit cleanup, real process cancellation.
+PASS: properties persistence, drafts, bulk, album/artist membership, playlist duplicates, atomic rollback, backup/legacy/corrupt restore, stale entities, actual file facts, Vorbis fields, source merge, queue metadata refresh, original audio SHA256.

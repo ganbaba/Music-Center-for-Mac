@@ -20,11 +20,15 @@ func dimensions(_ e: AXUIElement) -> CGSize? {
     return AXValueGetValue(raw as! AXValue, .cgSize, &s) ? s : nil
 }
 let arg = CommandLine.arguments
-guard let running = NSRunningApplication.runningApplications(withBundleIdentifier: "local.musiccenter.uirecreation.wizardsqa").first else { exit(2) }
+let isATRAC = ProcessInfo.processInfo.environment["MUSIC_CENTER_QA_KIND"] == "atrac"
+let targetBundle = isATRAC ? "local.musiccenter.uirecreation.atracqa" : "local.musiccenter.uirecreation.wizardsqa"
+let targetTitle = isATRAC ? "Music Center ATRAC QA" : "Music Center Wizards QA"
+guard let running = NSRunningApplication.runningApplications(withBundleIdentifier: targetBundle).first else { exit(2) }
 let pid = running.processIdentifier
 let app = AXUIElementCreateApplication(pid)
+if arg.count > 1, arg[1] == "quit" { running.terminate(); exit(0) }
 guard let windows = attribute(app, "AXWindows") as? [AXUIElement],
-      let win = windows.first(where: { label($0).contains("Music Center Wizards QA") }),
+      let win = windows.first(where: { label($0).contains(targetTitle) }),
       let origin = position(win), let winSize = dimensions(win) else { exit(3) }
 
 func all(_ node: AXUIElement, depth: Int = 0) -> [AXUIElement] {
@@ -84,7 +88,7 @@ if cmd == "fill" {
 if cmd == "window" {
     for item in CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String:Any]] ?? []
     where item[kCGWindowOwnerPID as String] as? Int32 == pid && item[kCGWindowLayer as String] as? Int == 0 {
-        if let number = item[kCGWindowNumber as String], (item[kCGWindowName as String] as? String) == "Music Center Wizards QA" {
+        if let number = item[kCGWindowNumber as String], (item[kCGWindowName as String] as? String) == targetTitle {
             print(number)
             exit(0)
         }
