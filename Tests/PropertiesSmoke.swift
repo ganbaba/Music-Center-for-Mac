@@ -174,6 +174,81 @@ func verifyProperties(in root: URL) async throws {
     }
     let afterWriteFailure = Library(directory: library.directory)
     try check(afterWriteFailure.propertyRecords == beforeWriteFailure, "runtime write failure rolls back the actual database")
+    let destinationTests = root.appending(path: "destination-tests")
+    try FileManager.default.createDirectory(at: destinationTests, withIntermediateDirectories: false)
+    let originalTracks = library.tracks
+    let originalEntries = library.playlistEntries.mapValues { $0.map(\.id) }
+    func noRestoreFiles(in folder: URL) throws {
+        let names = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+        try check(!names.contains("Music Center") && !names.contains { $0.hasPrefix(".music-center-restore-audio-") },
+                  "failed relocation leaves no published or temporary audio")
+    }
+    let occupied = destinationTests.appending(path: "Music Center")
+    let occupant = Data("keep existing file".utf8)
+    try occupant.write(to: occupied)
+    do {
+        _ = try await library.restore(candidate, preferences: prefs, audioFolder: destinationTests)
+        throw PropertyFailure(message: "restore overwrote an existing destination")
+    } catch is RestoreFailure {}
+    let occupiedAfter = try Data(contentsOf: occupied)
+    try check(occupiedAfter == occupant, "existing target file preserved")
+    try FileManager.default.removeItem(at: occupied)
+    let unavailable = root.appending(path: "missing-audio.musiccenterbackup")
+    try FileManager.default.copyItem(at: archive, to: unavailable)
+    try sql(unavailable, "UPDATE tracks SET path = '\(root.appending(path: "missing.wav").path)' WHERE id = '\(originalTracks[0].id.uuidString)'")
+    let missingAudio = try await library.inspectBackup(at: unavailable, preferences: prefs)
+    do {
+        _ = try await library.restore(missingAudio, preferences: prefs, audioFolder: destinationTests)
+        throw PropertyFailure(message: "missing source audio was accepted")
+    } catch is RestoreFailure {}
+    try noRestoreFiles(in: destinationTests)
+    try check(library.tracks == originalTracks && library.propertyRecords == beforeWriteFailure,
+              "missing source leaves current library untouched")
+    do {
+        _ = try await library.restore(candidate, preferences: blockedPreferences, audioFolder: destinationTests)
+        throw PropertyFailure(message: "relocation ignored settings write failure")
+    } catch is RestoreFailure {}
+    try noRestoreFiles(in: destinationTests)
+    try check(Library(directory: library.directory).tracks == originalTracks, "relocation rollback retains original track paths")
+    let interrupted = destinationTests.appending(path: "disconnected")
+    try FileManager.default.createDirectory(at: interrupted, withIntermediateDirectories: false)
+    _ = try library.restoreDestination(in: interrupted)
+    try FileManager.default.removeItem(at: interrupted)
+    try occupant.write(to: interrupted)
+    do {
+        _ = try await library.restore(candidate, preferences: prefs, audioFolder: interrupted)
+        throw PropertyFailure(message: "restore accepted disconnected destination")
+    } catch let failure as PropertyFailure { throw failure }
+      catch {}
+    let disconnectedAfter = try Data(contentsOf: interrupted)
+    try check(disconnectedAfter == occupant, "disconnected destination file preserved")
+    let relocatedArchive = root.appending(path: "same-name.musiccenterbackup")
+    try FileManager.default.copyItem(at: archive, to: relocatedArchive)
+    for (index, track) in originalTracks.prefix(2).enumerated() {
+        let twinFolder = root.appending(path: "twin-\(index)")
+        try FileManager.default.createDirectory(at: twinFolder, withIntermediateDirectories: false)
+        let twin = twinFolder.appending(path: "same-name.wav")
+        try FileManager.default.copyItem(at: track.url, to: twin)
+        try sql(relocatedArchive, "UPDATE tracks SET path = '\(twin.path)' WHERE id = '\(track.id.uuidString)'")
+    }
+    let relocation = try await library.inspectBackup(at: relocatedArchive, preferences: prefs)
+    let relocationRollback = try await library.restore(relocation, preferences: prefs, audioFolder: destinationTests)
+    let targetDirectory = destinationTests.appending(path: "Music Center").resolvingSymlinksInPath()
+    try check(library.tracks.count == 3 && library.tracks.allSatisfy { $0.url.resolvingSymlinksInPath().path.hasPrefix(targetDirectory.path + "/") },
+              "relocation replaces every registered path")
+    for track in library.tracks {
+        let original = originalTracks.first { $0.id == track.id }!
+        let copiedBytes = try Data(contentsOf: track.url)
+        let originalBytes = try Data(contentsOf: original.url)
+        try check(copiedBytes == originalBytes, "copied audio is byte-identical")
+    }
+    try check(Set(library.tracks.map(\.url)).count == 3, "duplicate audio filenames have distinct destinations")
+    try check(library.playlistEntries.mapValues { $0.map(\.id) } == originalEntries, "duplicate playlist memberships survive relocation")
+    let restoredReader = Library(directory: library.directory)
+    try check(restoredReader.tracks == library.tracks, "relocated paths persist after reopen")
+    let validRollback = try await library.inspectBackup(at: relocationRollback, preferences: prefs)
+    try check(validRollback.trackCount == 3, "relocation saves readable rollback archive")
+    _ = try await library.restore(candidate, preferences: prefs)
     let legacy = root.appending(path: "legacy.musiccenterbackup")
     try FileManager.default.copyItem(at: archive, to: legacy)
     try sql(legacy, "DROP TABLE library_properties; DROP TABLE music_center_backup_details")

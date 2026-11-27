@@ -19,6 +19,8 @@ struct RestoreWizard: View {
     @State private var issue: String?
     @State private var failure: String?
     @State private var inspection: Task<Void, Never>?
+    @State private var usesFolder = false
+    @State private var destinationFolder: URL?
 
     init(library: Library, preferences: PreviewPreferences, didRestore: @escaping () -> Void, close: @escaping () -> Void) {
         self.library = library
@@ -47,14 +49,16 @@ struct RestoreWizard: View {
             Text("将 Mac 版 Music Center 的备份恢复到当前曲库。")
             Text("恢复会替换当前曲库、播放列表、播放历史和设置。开始前会自动备份现有数据。")
                 .fixedSize(horizontal: false, vertical: true)
-            Text("音频文件仍使用备份中记录的原始路径。")
+            Text("恢复到指定文件夹时，会从备份记录的原位置复制音频。请确保原音频仍可读取。")
         case .selection:
             selectionContent
         case .ready:
             if let candidate {
                 Text("恢复来源：\(candidate.url.path)")
                     .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                Text("恢复目标：当前 Mac 曲库\n\(library.directory.path)")
+                Text("恢复目标：" + (usesFolder
+                    ? (destinationFolder?.appending(path: "Music Center").path ?? "")
+                    : "当前 Mac 曲库\n\(library.directory.path)"))
                     .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
                 Text("点击「开始」后，将覆盖当前曲库、播放列表、播放历史和设置。")
                     .fontWeight(.semibold).fixedSize(horizontal: false, vertical: true)
@@ -99,16 +103,24 @@ struct RestoreWizard: View {
             }.padding(.top, 30)
             VStack(alignment: .leading, spacing: 8) {
                 Text("恢复地址：")
-                SettingsRadio("恢复到与备份数据相同的地址", selected: true, action: {})
+                SettingsRadio("恢复到与备份数据相同的地址", selected: !usesFolder) {
+                    usesFolder = false
+                    issue = nil
+                }
                     .help("恢复当前曲库和设置，音频继续使用备份中记录的原始路径。")
-                SettingsRadio("恢复到指定文件夹", selected: false, action: {})
-                    .disabled(true)
-                    .help("当前 Mac 备份仅记录音频原路径，指定文件夹恢复音频尚未实现。")
+                SettingsRadio("恢复到指定文件夹", selected: usesFolder) {
+                    usesFolder = true
+                    issue = nil
+                }
+                    .help("将可读取的原音频复制到所选位置的新 Music Center 文件夹，并更新曲库路径。")
                 HStack(spacing: 10) {
-                    Text("").frame(maxWidth: .infinity, alignment: .leading)
+                    Text(destinationFolder?.path ?? "").lineLimit(1).truncationMode(.middle)
+                        .help(destinationFolder?.path ?? "请选择恢复文件夹")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 6).frame(height: 27).border(Color(white: 0.63))
-                    SettingsAction("浏览…", width: 78, action: {})
-                }.disabled(true)
+                    SettingsAction("浏览…", width: 78, action: chooseFolder)
+                        .accessibilityLabel("浏览恢复文件夹")
+                }.disabled(!usesFolder || choosingFile)
             }.padding(.top, 30)
             if checkingFile {
                 Text("正在检查备份…").padding(.top, 8)
@@ -139,7 +151,8 @@ struct RestoreWizard: View {
             LibraryWizardPrimary(title: "下一步", enabled: !library.restoring) { page = .selection }
             SettingsAction("取消", action: cancel)
         case .selection:
-            LibraryWizardPrimary(title: "下一步", enabled: candidate != nil && !choosingFile) { page = .ready }
+            LibraryWizardPrimary(title: "下一步", enabled: candidate != nil && !choosingFile
+                                 && (!usesFolder || destinationFolder != nil), action: prepare)
             SettingsAction("取消", action: cancel).disabled(choosingFile)
         case .ready:
             SettingsAction("后退") { page = .selection }
@@ -155,8 +168,46 @@ struct RestoreWizard: View {
     private var progressLabel: String {
         switch library.restoreProgress {
         case .checking, nil: "正在重新核对备份…"
+        case let .copyingAudio(completed, total): "正在复制音频… \(completed)/\(total)"
         case .savingCurrent: "正在保存恢复前备份…"
         case .applying: "正在恢复备份数据…"
+        }
+    }
+
+    private func chooseFolder() {
+        let panel = NSOpenPanel()
+        panel.title = "选择恢复文件夹"
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.directoryURL = destinationFolder
+        panel.prompt = "选择"
+        choosingFile = true
+        let finish: (NSApplication.ModalResponse) -> Void = { response in
+            choosingFile = false
+            if response == .OK, let url = panel.url {
+                destinationFolder = url
+                issue = nil
+            }
+        }
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window, completionHandler: finish)
+        } else {
+            panel.begin(completionHandler: finish)
+        }
+    }
+
+    private func prepare() {
+        guard candidate != nil else { return }
+        do {
+            if usesFolder {
+                guard let destinationFolder else { return }
+                _ = try library.restoreDestination(in: destinationFolder)
+            }
+            issue = nil
+            page = .ready
+        } catch {
+            issue = error.localizedDescription
         }
     }
 
@@ -204,7 +255,8 @@ struct RestoreWizard: View {
         page = .working
         Task {
             do {
-                let rollback = try await library.restore(candidate, preferences: preferences)
+                let rollback = try await library.restore(candidate, preferences: preferences,
+                                                         audioFolder: usesFolder ? destinationFolder : nil)
                 didRestore()
                 page = .complete(rollback)
             } catch {

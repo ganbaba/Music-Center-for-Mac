@@ -81,7 +81,7 @@ struct RestoreCandidate: Sendable {
 }
 
 enum RestoreProgress: Sendable {
-    case checking, savingCurrent, applying
+    case checking, copyingAudio(completed: Int, total: Int), savingCurrent, applying
 }
 
 struct RestoreFailure: LocalizedError {
@@ -248,8 +248,21 @@ final class Library {
         return candidate
     }
 
-    func restore(_ candidate: RestoreCandidate, preferences: PreviewPreferences) async throws -> URL {
+    func restoreDestination(in folder: URL) throws -> URL {
+        let target = try Self.backupLocation(folder.appending(path: "Music Center", directoryHint: .isDirectory), outside: directory)
+        let parent = target.deletingLastPathComponent()
+        guard try parent.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+            throw RestoreFailure(message: "请选择可用的恢复文件夹。")
+        }
+        guard !FileManager.default.fileExists(atPath: target.path) else {
+            throw RestoreFailure(message: "所选位置已有 Music Center 项目，请选择其他文件夹。")
+        }
+        return target
+    }
+
+    func restore(_ candidate: RestoreCandidate, preferences: PreviewPreferences, audioFolder: URL? = nil) async throws -> URL {
         let source = try backupSource()
+        let destination = try audioFolder.map { try restoreDestination(in: $0) }
         let previous = try preferences.snapshot()
         let restored = try preferences.decodeSnapshot(candidate.settings)
         let writeSettings = preferences.restorationWriter()
@@ -264,6 +277,53 @@ final class Library {
             guard try Self.digest(of: copy) == candidate.digest else {
                 throw RestoreFailure(message: "备份文件已更改，请重新选择后再恢复。")
             }
+            var publishedAudio: URL?
+            var committed = false
+            defer {
+                if !committed, let publishedAudio { try? FileManager.default.removeItem(at: publishedAudio) }
+            }
+            var paths: [UUID: URL] = [:]
+            if let destination {
+                let reader = try LibraryDatabase(url: copy, readOnly: true)
+                let tracks = try reader.load().0
+                let parent = destination.deletingLastPathComponent()
+                let parentIdentity = try parent.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier
+                let stage = parent.appending(path: ".music-center-restore-audio-\(UUID().uuidString)", directoryHint: .isDirectory)
+                do {
+                    try FileManager.default.createDirectory(at: stage, withIntermediateDirectories: false,
+                                                            attributes: [.posixPermissions: 0o700])
+                    defer { try? FileManager.default.removeItem(at: stage) }
+                    await self.setRestoreProgress(.copyingAudio(completed: 0, total: tracks.count))
+                    for (index, track) in tracks.enumerated() {
+                        let original = track.url.standardizedFileURL.resolvingSymlinksInPath()
+                        guard try original.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile == true else {
+                            throw RestoreFailure(message: "无法读取原音频文件：\n\(track.url.path)")
+                        }
+                        let relative = "Audio/\(track.id.uuidString)"
+                        let trackFolder = stage.appending(path: relative, directoryHint: .isDirectory)
+                        try FileManager.default.createDirectory(at: trackFolder, withIntermediateDirectories: true)
+                        let audio = trackFolder.appending(component: original.lastPathComponent)
+                        let checksum = try Self.digest(of: original)
+                        try FileManager.default.copyItem(at: original, to: audio)
+                        guard try Self.digest(of: audio) == checksum else {
+                            throw RestoreFailure(message: "复制期间音频文件发生变化，请重新恢复。\n\(track.url.path)")
+                        }
+                        paths[track.id] = destination.appending(path: relative).appending(component: original.lastPathComponent)
+                        await self.setRestoreProgress(.copyingAudio(completed: index + 1, total: tracks.count))
+                    }
+                    let currentParent = try parent.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier
+                    guard let parentIdentity, let currentParent,
+                          parentIdentity.isEqual(currentParent) else {
+                        throw RestoreFailure(message: "恢复目的地已更改，请重新选择文件夹。")
+                    }
+                    try FileManager.default.moveItem(at: stage, to: destination)
+                    publishedAudio = destination
+                } catch let failure as RestoreFailure {
+                    throw failure
+                } catch {
+                    throw RestoreFailure(message: "无法复制音频。请检查原文件、恢复目的地和剩余空间。")
+                }
+            }
             await self.setRestoreProgress(.savingCurrent)
             let writer = try LibraryDatabase(url: source, existing: true)
             do {
@@ -274,10 +334,12 @@ final class Library {
             await self.setRestoreProgress(.applying)
             var settingsWritten = false
             do {
-                return try writer.restoreSnapshot(from: copy) {
+                let result = try writer.restoreSnapshot(from: copy, paths: paths) {
                     try writeSettings(candidate.settings, true)
                     settingsWritten = true
                 }
+                committed = true
+                return result
             } catch {
                 if settingsWritten {
                     do { try writeSettings(previous, false) }
@@ -754,7 +816,7 @@ private final class LibraryDatabase {
         return details
     }
 
-    func restoreSnapshot(from url: URL, applyingSettings: () throws -> Void) throws -> RestoredContents {
+    func restoreSnapshot(from url: URL, paths: [UUID: URL] = [:], applyingSettings: () throws -> Void) throws -> RestoredContents {
         guard var location = URLComponents(url: url, resolvingAgainstBaseURL: true) else { throw CocoaError(.fileReadInvalidFileName) }
         location.queryItems = [URLQueryItem(name: "mode", value: "ro")]
         guard let source = location.string else { throw CocoaError(.fileReadInvalidFileName) }
@@ -767,6 +829,9 @@ private final class LibraryDatabase {
             try execute("DELETE FROM tracks")
             let fields = "id, path, title, artist, album, duration, album_artist, disc_number, track_number, artwork, metadata_read, registered_at, last_played_at, play_count"
             try execute("INSERT INTO tracks (\(fields)) SELECT \(fields) FROM restore.tracks")
+            for (id, location) in paths {
+                try execute("UPDATE tracks SET path = ? WHERE id = ?", [.text(location.path), .uuid(id)])
+            }
             try execute("INSERT INTO playlists (id, name) SELECT id, name FROM restore.playlists")
             try execute("""
                 INSERT INTO playlist_entries (id, playlist_id, track_id, position)
