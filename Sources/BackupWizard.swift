@@ -3,6 +3,8 @@ import SwiftUI
 
 struct LibraryWizardPresentation<Panel: View>: ViewModifier {
     let isPresented: Bool
+    var width: CGFloat = 620
+    var preferredHeight: CGFloat = 560
     @ViewBuilder let panel: () -> Panel
 
     func body(content: Content) -> some View {
@@ -10,9 +12,8 @@ struct LibraryWizardPresentation<Panel: View>: ViewModifier {
             .overlay {
                 if isPresented {
                     GeometryReader { geometry in
-                        let width: CGFloat = 620
                         let scale = min(1, max(0.1, (geometry.size.width - 24) / width))
-                        let height = min(560, max(1, (geometry.size.height - 24) / scale))
+                        let height = min(preferredHeight, max(1, (geometry.size.height - 24) / scale))
                         ZStack {
                             Color(white: 0.93).opacity(0.68).contentShape(Rectangle())
                             panel()
@@ -28,6 +29,10 @@ struct LibraryWizardPresentation<Panel: View>: ViewModifier {
 
 struct LibraryWizardPanel<Contents: View, Controls: View>: View {
     let title: String
+    var headerHeight: CGFloat = 48
+    var contentInset: CGFloat = 37
+    var contentTop: CGFloat = 12
+    var fontSize: CGFloat = 12
     var closeDisabled = false
     let close: () -> Void
     var failure: String? = nil
@@ -37,7 +42,7 @@ struct LibraryWizardPanel<Contents: View, Controls: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(title).frame(maxWidth: .infinity).frame(height: 48).padding(.horizontal, 42)
+            Text(title).frame(maxWidth: .infinity).frame(height: headerHeight).padding(.horizontal, 42)
                 .overlay(alignment: .trailing) {
                     Button(action: close) {
                         Image(systemName: "xmark").font(.system(size: 13, weight: .medium))
@@ -49,14 +54,14 @@ struct LibraryWizardPanel<Contents: View, Controls: View>: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 15, content: contents)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 37).padding(.vertical, 12)
+                    .padding(.horizontal, contentInset).padding(.top, contentTop).padding(.bottom, 12)
             }
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
                 controls()
             }.padding(.horizontal, 20).padding(.vertical, 15)
         }
-        .font(.system(size: 12)).foregroundStyle(SettingsStyle.ink)
+        .font(.system(size: fontSize)).foregroundStyle(SettingsStyle.ink)
         .background(.white).environment(\.colorScheme, .light)
         .disabled(failure != nil)
         .overlay {

@@ -28,7 +28,8 @@ struct RestoreWizard: View {
     }
 
     var body: some View {
-        LibraryWizardPanel(title: "恢复备份数据", closeDisabled: page == .working || choosingFile,
+        LibraryWizardPanel(title: "恢复备份数据", headerHeight: 60, contentInset: 50, contentTop: 20,
+                           fontSize: 14, closeDisabled: page == .working || choosingFile,
                            close: cancel, failure: failure, dismissFailure: dismissFailure) {
             bodyContent
         } controls: {
@@ -48,37 +49,13 @@ struct RestoreWizard: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text("音频文件仍使用备份中记录的原始路径。")
         case .selection:
-            VStack(alignment: .leading, spacing: 5) {
-                Text("需要恢复的备份")
-                HStack(spacing: 10) {
-                    Text(source?.path ?? "请选择 .musiccenterbackup 文件")
-                        .lineLimit(1).truncationMode(.middle).help(source?.path ?? "请选择备份文件")
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6)
-                        .frame(height: 27).border(Color(white: 0.63))
-                    SettingsAction("浏览…", width: 78, action: chooseFile).disabled(choosingFile)
-                }
-            }
-            if checkingFile {
-                LibraryWizardProgress(title: "正在检查备份…")
-            } else if let candidate {
-                Text("备份信息").fontWeight(.semibold)
-                Text("备份日期：" + (candidate.createdAt?.formatted(date: .numeric, time: .standard) ?? "未记录"))
-                Text("曲目：\(candidate.trackCount) 首")
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("备注")
-                    Text(candidate.notes.flatMap { $0.isEmpty ? nil : $0 } ?? (candidate.notes == nil ? "未记录" : "无"))
-                        .frame(maxWidth: .infinity, minHeight: 54, alignment: .topLeading)
-                        .padding(7).border(Color(white: 0.63))
-                        .textSelection(.enabled)
-                }
-            } else if let issue {
-                Text(issue).foregroundStyle(Color(red: 0.68, green: 0.12, blue: 0.09))
-            }
+            selectionContent
         case .ready:
             if let candidate {
                 Text("恢复来源：\(candidate.url.path)")
                     .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                Text("恢复目标：当前 Mac 曲库")
+                Text("恢复目标：当前 Mac 曲库\n\(library.directory.path)")
+                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
                 Text("点击「开始」后，将覆盖当前曲库、播放列表、播放历史和设置。")
                     .fontWeight(.semibold).fixedSize(horizontal: false, vertical: true)
                 Text("开始前会自动保存当前曲库和设置。")
@@ -95,6 +72,65 @@ struct RestoreWizard: View {
             Text("恢复前备份：\(rollback.path)")
                 .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
         }
+    }
+
+    private var selectionContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("指定要恢复的备份数据，然后指定备份数据恢复到的位置。")
+                .padding(.bottom, 30)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("需恢复的备份数据：")
+                HStack(spacing: 10) {
+                    Text(source?.path ?? "")
+                        .lineLimit(1).truncationMode(.middle).help(source?.path ?? "请选择备份文件")
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6)
+                        .frame(height: 27).border(Color(white: 0.63))
+                    SettingsAction("浏览…", width: 78, action: chooseFile).disabled(choosingFile)
+                }
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                Text("备份数据信息").padding(.bottom, 14)
+                Text("备份日期：" + dateLabel)
+                Text("备注：")
+                Text(notesLabel)
+                    .frame(maxWidth: .infinity, minHeight: 54, alignment: .topLeading)
+                    .padding(3).border(Color(white: 0.63))
+                    .textSelection(.enabled)
+            }.padding(.top, 30)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("恢复地址：")
+                SettingsRadio("恢复到与备份数据相同的地址", selected: true, action: {})
+                    .help("恢复当前曲库和设置，音频继续使用备份中记录的原始路径。")
+                SettingsRadio("恢复到指定文件夹", selected: false, action: {})
+                    .disabled(true)
+                    .help("当前 Mac 备份仅记录音频原路径，指定文件夹恢复音频尚未实现。")
+                HStack(spacing: 10) {
+                    Text("").frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6).frame(height: 27).border(Color(white: 0.63))
+                    SettingsAction("浏览…", width: 78, action: {})
+                }.disabled(true)
+            }.padding(.top, 30)
+            if checkingFile {
+                Text("正在检查备份…").padding(.top, 8)
+            }
+            if let issue {
+                Text(issue).foregroundStyle(Color(red: 0.68, green: 0.12, blue: 0.09))
+            }
+        }
+    }
+
+    private var dateLabel: String {
+        guard let candidate else { return "" }
+        guard let date = candidate.createdAt else { return "未记录" }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.dateFormat = "yyyy/MM/dd HH:mm:ss"
+        return formatter.string(from: date)
+    }
+
+    private var notesLabel: String {
+        guard let candidate else { return "" }
+        return candidate.notes ?? "未记录"
     }
 
     @ViewBuilder private var footer: some View {

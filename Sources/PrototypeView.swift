@@ -364,7 +364,9 @@ struct PrototypeView: View {
             }
         }
         .modifier(InformationPresentation(page: $informationPage))
-        .modifier(LibraryWizardPresentation(isPresented: showsBackup || showsRestore) {
+        .modifier(LibraryWizardPresentation(isPresented: showsBackup || showsRestore,
+                                          width: showsRestore ? 640 : 620,
+                                          preferredHeight: showsRestore ? 640 : 560) {
             if showsRestore {
                 RestoreWizard(library: library, preferences: preferences, didRestore: didRestore,
                               close: { showsRestore = false })
