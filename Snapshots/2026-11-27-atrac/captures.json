@@ -305,5 +305,14 @@
       1160,
       1280
     ]
+  },
+  {
+    "file": "mac/decoder-error.jpg",
+    "state": "decoder-error",
+    "reference": null,
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "06de42bbbaa98e1b897f944102d24ab2eefa2c8109534ce77f39ab606fa1219f",
+    "name": "无效解码器",
+    "result": "真实选择不可执行文件，提示错误并返回配置。"
   }
 ]

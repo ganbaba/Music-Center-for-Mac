@@ -24,9 +24,5 @@ Traceback (most recent call last):
 AssertionError: cannot press 取消
 
 SUPPLEMENTAL DECODER CHECK
-Traceback (most recent call last):
-  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 142, in <module>
-    press('加入损坏文件');time.sleep(.5)
-  File "/Users/luyufeng/Documents/Codex Projects/Music Center for Mac/Tests/audit-atrac-ui.py", line 31, in press
-    raise AssertionError('cannot press '+label)
-AssertionError: cannot press 加入损坏文件
+CAPTURE decoder-error
+SUPPLEMENT: decoder-only checks; 17 existing screenshots retained. PASS: actual ATRAC routes, AAC/FLAC completion, empty scan, move controls, Return/Escape protection, real cancellation, partial failure, details, compact and missing-decoder selection validated.

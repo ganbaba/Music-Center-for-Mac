@@ -17,3 +17,4 @@
 | [部分失败](mac/partial-failure.jpg) | 同批有效源转换成功、无效源解码失败，保留未转换源。 | 缺少对应原图 |
 | [失败详情](mac/failure-details.jpg) | 显示真实子进程返回内容；不借用 Windows 导入错误图。 | 缺少对应原图 |
 | [紧凑窗口](mac/compact.jpg) | 正文滚动，底部按钮固定；原图用于正常布局对照。 | [原图](../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg) |
+| [无效解码器](mac/decoder-error.jpg) | 真实选择不可执行文件，提示错误并返回配置。 | 缺少对应原图 |

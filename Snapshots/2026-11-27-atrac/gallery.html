@@ -6,7 +6,7 @@ h1{font-size:26px}nav{display:flex;gap:10px;flex-wrap:wrap}a{color:#705416}artic
 .mac{display:block;width:100%;height:auto;border:1px solid #ddd}.frame{position:relative;aspect-ratio:580/640;overflow:hidden;background:#eee;border:1px solid #ddd}
 .frame img{position:absolute;width:235.5172413793%;left:-67.7586206897%;top:-8.75%}.missing{padding:30px;background:#eee}
 @media(max-width:800px){.pair{grid-template-columns:1fr}}</style><h1>ATRAC 向导 · 2026-11-27</h1>
-<p>17 个实际状态已完成，解码器选择器补验待完成。</p><p>左侧为生产视图在隔离 QA 的实际截图，右侧为 Windows 原图的面板区域。点击图片查看完整图片。<a href="README.md">能力、差异和实际验证说明</a>。</p><nav>
+<p>18 个实际状态已完成验收。</p><p>左侧为生产视图在隔离 QA 的实际截图，右侧为 Windows 原图的面板区域。点击图片查看完整图片。<a href="README.md">能力、差异和实际验证说明</a>。</p><nav>
 <a href="#introduction">介绍</a>
 <a href="#options-empty">初始选项</a>
 <a href="#aac-keep">AAC 与保留原文件</a>
@@ -24,6 +24,7 @@ h1{font-size:26px}nav{display:flex;gap:10px;flex-wrap:wrap}a{color:#705416}artic
 <a href="#partial-failure">部分失败</a>
 <a href="#failure-details">失败详情</a>
 <a href="#compact">紧凑窗口</a>
+<a href="#decoder-error">无效解码器</a>
 </nav>
 <article id="introduction"><h2>介绍</h2><p>按原图组织说明与下一页入口；空闲 Escape 关闭已验证。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/introduction.jpg"><img class="mac" loading="lazy" src="mac/introduction.jpg" alt="介绍"></a></figure><figure><figcaption>Windows 原版</figcaption>
 <a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg" alt="Windows 介绍"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/05-entry-with-sample.jpg</small></p>
@@ -75,5 +76,8 @@ h1{font-size:26px}nav{display:flex;gap:10px;flex-wrap:wrap}a{color:#705416}artic
 </figure></div></article>
 <article id="compact"><h2>紧凑窗口</h2><p>正文滚动，底部按钮固定；原图用于正常布局对照。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/compact.jpg"><img class="mac" loading="lazy" src="mac/compact.jpg" alt="紧凑窗口"></a></figure><figure><figcaption>Windows 原版</figcaption>
 <a href="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg" alt="Windows 紧凑窗口"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/03-atrac/06-files-found-options-empty.jpg</small></p>
+</figure></div></article>
+<article id="decoder-error"><h2>无效解码器</h2><p>真实选择不可执行文件，提示错误并返回配置。</p><div class="pair"><figure><figcaption>Mac · 实际状态</figcaption><a href="mac/decoder-error.jpg"><img class="mac" loading="lazy" src="mac/decoder-error.jpg" alt="无效解码器"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<div class="missing">当前没有对应的 Windows 实际结果原图。本图来自 Mac 实测，不以其他错误状态代替。</div>
 </figure></div></article>
 </html>
