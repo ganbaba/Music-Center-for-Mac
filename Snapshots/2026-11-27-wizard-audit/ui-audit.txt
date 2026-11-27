@@ -1,0 +1,21 @@
+CAPTURE backup-introduction
+CAPTURE backup-searching
+CAPTURE backup-empty
+CAPTURE backup-filled
+CAPTURE backup-confirm
+CAPTURE backup-writing
+CAPTURE backup-complete
+CAPTURE backup-write-error
+CAPTURE restore-introduction
+CAPTURE restore-empty
+CAPTURE restore-invalid
+CAPTURE restore-selected
+CAPTURE restore-confirm
+CAPTURE restore-working
+CAPTURE restore-complete
+CAPTURE restore-custom
+CAPTURE restore-custom-confirm
+CAPTURE restore-runtime-error
+CAPTURE backup-compact
+CAPTURE restore-compact
+PASS: all captured states are production routes; form validation, Return protection, Escape behavior, real write/restore and file preservation verified.

@@ -1,0 +1,2 @@
+PASS · 备份恢复验证
+PASS: properties persistence, drafts, bulk, album/artist membership, playlist duplicates, atomic rollback, backup/legacy/corrupt restore, stale entities, actual file facts, Vorbis fields, source merge, queue metadata refresh, original audio SHA256.

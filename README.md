@@ -1,5 +1,9 @@
 # Music Center for Mac
 
+## 2026-11-27 备份恢复逐状态验收
+
+按 Windows 原图统一两个向导的面板、字段、按钮与各阶段布局，修复 Escape 关闭及确认页 Return 保护，保存 20 个实际状态截图和可重跑的独立 QA。见[本轮验收说明](Snapshots/2026-11-27-wizard-audit/README.md)和[Windows / Mac 并排图集](Snapshots/2026-11-27-wizard-audit/gallery.html)。原生选择器、真实进度及恢复停止能力等差异和缺失参考已逐项记录。
+
 ## 2026-11-26 系统信息与版本信息快照
 
 “帮助”中的两个入口已改为独立只读窗口，支持完整信息复制、Windows 风格滚动条、紧凑布局和键盘关闭。系统数据来自当前 Mac；版本页读取实际 Mac 版本 **0.1.0（构建 1）**，另标注 Windows 参考版本 2.7.4。范围、14 张验收图与实际验证见 [本轮快照](Snapshots/2026-11-26-information/README.md) 和 [图集](Snapshots/2026-11-26-information/gallery.html)。

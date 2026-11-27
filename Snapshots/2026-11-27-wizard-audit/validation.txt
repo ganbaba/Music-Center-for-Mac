@@ -1,0 +1,16 @@
+Date: 2026-11-27 (Asia/Hong_Kong)
+Production Release: BUILD SUCCEEDED
+Production codesign --verify --deep --strict: PASS
+Wizards QA Release: BUILD SUCCEEDED
+QA codesign --verify --strict: PASS
+Isolated properties/backup/restore/relocation regression: PASS (regression.txt)
+Real production UI routes, 20 states: PASS (ui-audit.txt)
+Restore progress Stop: visible and disabled (AXButton off)
+Restore help: clicked and actual local explanation read
+Final QA and production wizard/presentation source byte comparison: PASS
+Capture SHA256, existing Windows source SHA256, gallery links: PASS
+plutil project configuration: OK
+git diff --check: PASS
+Screenshots only: no database, audio fixture, application binary or credentials included
+No installed-app replacement or production-library operation
+Windows search-in-progress / stop-confirmation reference gaps remain documented

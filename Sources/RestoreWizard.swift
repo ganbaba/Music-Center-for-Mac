@@ -21,6 +21,7 @@ struct RestoreWizard: View {
     @State private var inspection: Task<Void, Never>?
     @State private var usesFolder = false
     @State private var destinationFolder: URL?
+    @State private var showsHelp = false
 
     init(library: Library, preferences: PreviewPreferences, didRestore: @escaping () -> Void, close: @escaping () -> Void) {
         self.library = library
@@ -46,35 +47,41 @@ struct RestoreWizard: View {
     @ViewBuilder private var bodyContent: some View {
         switch page {
         case .introduction:
-            Text("将 Mac 版 Music Center 的备份恢复到当前曲库。")
-            Text("恢复会替换当前曲库、播放列表、播放历史和设置。开始前会自动备份现有数据。")
-                .fixedSize(horizontal: false, vertical: true)
-            Text("恢复到指定文件夹时，会从备份记录的原位置复制音频。请确保原音频仍可读取。")
+            VStack(alignment: .leading, spacing: 8) {
+                Text("恢复已备份的 Music Center 数据到此电脑。")
+                Text("备注：")
+                Text("・执行恢复操作会将 Music Center 管理的所有数据，恢复到执行备份时的状态。")
+                Text("・指定文件夹恢复需要从原始位置读取音频。")
+                Button("查看帮助") { showsHelp = true }
+                    .buttonStyle(.plain).underline().foregroundStyle(Color(white: 0.48))
+                    .popover(isPresented: $showsHelp) {
+                        Text("请选择 Music Center for Mac 创建的 .musiccenterbackup 文件。恢复前会自动保存当前曲库和设置。指定文件夹恢复会复制原位置仍可读取的音频。")
+                            .font(.system(size: 13)).frame(width: 300).padding(16)
+                    }
+            }.fixedSize(horizontal: false, vertical: true)
         case .selection:
             selectionContent
         case .ready:
             if let candidate {
-                Text("恢复来源：\(candidate.url.path)")
-                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                Text("恢复目标：" + (usesFolder
-                    ? (destinationFolder?.appending(path: "Music Center").path ?? "")
-                    : "当前 Mac 曲库\n\(library.directory.path)"))
-                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                Text("点击「开始」后，将覆盖当前曲库、播放列表、播放历史和设置。")
-                    .fontWeight(.semibold).fixedSize(horizontal: false, vertical: true)
-                Text("开始前会自动保存当前曲库和设置。")
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("已准备恢复备份数据。\n\n点击【开始】，开始恢复。").padding(.bottom, 30)
+                    Text("需恢复的备份数据：\(candidate.url.path)")
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                    Text("恢复地址：" + (usesFolder
+                        ? (destinationFolder?.appending(path: "Music Center").path ?? "")
+                        : "恢复到与备份数据相同的地址"))
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                }
             }
         case .working:
             if failure == nil {
                 LibraryWizardProgress(title: progressLabel)
-                Text("恢复期间请保持备份磁盘连接。")
+                Text("恢复操作过程中请勿关闭计算机或取出媒体。").padding(.top, 60)
             } else {
                 Text("恢复未完成。")
             }
         case let .complete(rollback):
-            Text("恢复已完成。")
-            Text("恢复前备份：\(rollback.path)")
-                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            Text("恢复已完成。").help("恢复前备份：\(rollback.path)")
         }
     }
 
@@ -88,9 +95,9 @@ struct RestoreWizard: View {
                     Text(source?.path ?? "")
                         .lineLimit(1).truncationMode(.middle).help(source?.path ?? "请选择备份文件")
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6)
-                        .frame(height: 27).border(Color(white: 0.63))
-                    SettingsAction("浏览…", width: 78, action: chooseFile).disabled(choosingFile)
-                }
+                        .frame(height: 32).border(Color(white: 0.63))
+                    LibraryWizardSecondary("浏览…", width: 80, action: chooseFile).disabled(choosingFile)
+                }.frame(width: 494)
             }
             VStack(alignment: .leading, spacing: 0) {
                 Text("备份数据信息").padding(.bottom, 14)
@@ -117,10 +124,10 @@ struct RestoreWizard: View {
                     Text(destinationFolder?.path ?? "").lineLimit(1).truncationMode(.middle)
                         .help(destinationFolder?.path ?? "请选择恢复文件夹")
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 6).frame(height: 27).border(Color(white: 0.63))
-                    SettingsAction("浏览…", width: 78, action: chooseFolder)
+                        .padding(.horizontal, 6).frame(height: 32).border(Color(white: 0.63))
+                    LibraryWizardSecondary("浏览…", width: 80, action: chooseFolder)
                         .accessibilityLabel("浏览恢复文件夹")
-                }.disabled(!usesFolder || choosingFile)
+                }.frame(width: 494).disabled(!usesFolder || choosingFile)
             }.padding(.top, 30)
             if checkingFile {
                 Text("正在检查备份…").padding(.top, 8)
@@ -149,19 +156,19 @@ struct RestoreWizard: View {
         switch page {
         case .introduction:
             LibraryWizardPrimary(title: "下一步", enabled: !library.restoring) { page = .selection }
-            SettingsAction("取消", action: cancel)
+            LibraryWizardSecondary("取消", action: cancel)
         case .selection:
             LibraryWizardPrimary(title: "下一步", enabled: candidate != nil && !choosingFile
                                  && (!usesFolder || destinationFolder != nil), action: prepare)
-            SettingsAction("取消", action: cancel).disabled(choosingFile)
+            LibraryWizardSecondary("取消", action: cancel).disabled(choosingFile)
         case .ready:
-            SettingsAction("后退") { page = .selection }
+            LibraryWizardSecondary("后退") { page = .selection }
             LibraryWizardPrimary(title: "开始", isDefault: false, action: start)
-            SettingsAction("取消", action: cancel)
+            LibraryWizardSecondary("取消", action: cancel)
         case .working:
-            EmptyView()
-        case .complete:
-            LibraryWizardPrimary(title: "确定", action: close)
+            LibraryWizardSecondary("停止") {}.disabled(true)
+        case let .complete(rollback):
+            LibraryWizardPrimary(title: "确定", action: close).help("恢复前备份：\(rollback.path)")
         }
     }
 

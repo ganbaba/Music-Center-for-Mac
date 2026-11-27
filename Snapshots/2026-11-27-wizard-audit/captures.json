@@ -1,0 +1,382 @@
+[
+  {
+    "file": "mac/backup-introduction.jpg",
+    "state": "backup-introduction",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/01-entry.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "6a0350b1d67138d93fce32305505ae25d5901fe8b5ae78758b190803fb9752f0",
+    "name": "备份介绍",
+    "result": "保留原图信息层级，并说明 Mac 备份范围。",
+    "reference_sha256": "bf59a7d7e95e1b515c5c209a15b78c6daae1dbcfa6e3948eb905571a201f328b",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-searching.jpg",
+    "state": "backup-searching",
+    "reference": null,
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "59a57629336c70d4555889c8c548df5d7963c80d25ee3dc5663e53c91682ba02",
+    "name": "搜索等待",
+    "result": "实际 SQLite 等待阶段；当前没有该瞬间的 Windows 原图。"
+  },
+  {
+    "file": "mac/backup-empty.jpg",
+    "state": "backup-empty",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "a08357917139a308bf76e15504c5d2b2b6b6ab6064e0525f28135eb154984895",
+    "name": "备份空配置",
+    "result": "初始名称和路径为空，下一步禁用。",
+    "reference_sha256": "ae855b3e1662257da39f820a0592fa549663baca9677862c1c503d07cc829261",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-filled.jpg",
+    "state": "backup-filled",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/04-options-filled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c07b994496bfcf7b54f6322dbc167da4367f83d37de337967cccf5383cb67f7c",
+    "name": "备份填写配置",
+    "result": "真实路径、名称与多行备注；32 字符限制已验证。",
+    "reference_sha256": "bc74f5283bb9796de4522b7011b1c3c529c1796172582f050477494391426cb8",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-confirm.jpg",
+    "state": "backup-confirm",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/05-ready-to-start.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "7df9bc0c60d30cbfb2ec0ff85be9cc247911830dfc892414cfc4a7a9b19a4e66",
+    "name": "备份确认",
+    "result": "显示真实大小和目标；Return 不开始写入。",
+    "reference_sha256": "ac8b2ef3f974a5d740b8c04f7a05600cbc663fd5fcd2e5c516122ea0930c69e9",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-writing.jpg",
+    "state": "backup-writing",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/15-backup-progress-100-unfilled.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c59e254f78185412184b518bfad984c749e3f20f3f94cd7553e62fac86c0ed46",
+    "name": "实际写入",
+    "result": "真实备份任务；Escape 不终止，停止按钮保留。",
+    "reference_sha256": "e8466c8495e52cc040466e1b8acc7ced3d3cf4f198f96b180647fcc5aeea2b84",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-complete.jpg",
+    "state": "backup-complete",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/06-completed.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "0a4ccc77e544fc647cfaaf8a32a900ac216992ae9ea43defcb0ccbee08269281",
+    "name": "备份完成",
+    "result": "备份实际生成，3 条曲目与备注已读回核对。",
+    "reference_sha256": "831487c818df1df82a32d66240c1162fcc0d60eef93dc08e5e580efc722a1c92",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/backup-write-error.jpg",
+    "state": "backup-write-error",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/13-runtime-write-failed.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "c82df920b81c934fa6bfde657817d313241c080717e624b104d949ef645d8c20",
+    "name": "备份运行失败",
+    "result": "确认后将临时目标目录替换为文件触发；确认后返回配置。",
+    "reference_sha256": "7648382dd3fe524a7ee7e4aa0b3eae484dc46838bb1865e86999fb8c07898fd7",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-introduction.jpg",
+    "state": "restore-introduction",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/01-entry.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "39dc8b2e260c3993855995ebe7bc83f1a84d9c5096a007d8f72eb93182931ac0",
+    "name": "恢复介绍",
+    "result": "原图说明结构，查看帮助打开真实本地说明。",
+    "reference_sha256": "41bfc68dd0a7ea8a8b9cf6d9ee9561e9695a57a9e86665732ebba0f7dd2e9483",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-empty.jpg",
+    "state": "restore-empty",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "7148b3818a7a49ae24c26699a03629e89e8877e6611a9b32a84a04d796bb30b7",
+    "name": "恢复空选择",
+    "result": "日期和备注框、两种地址选项均显示；下一步禁用。",
+    "reference_sha256": "f210c8941faa90595e3f20f9a7161e870e5de1f8d4376856b60e035f963f9eb4",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-invalid.jpg",
+    "state": "restore-invalid",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/03-invalid-backup-directory.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "7450837c49ae1bf151a3bce21a9a9b986b03166e74ae991fd6ce3f48b58aa41c",
+    "name": "无效备份",
+    "result": "Mac 损坏文件拒绝；Windows 参考是无效备份目录，输入形式不同。",
+    "reference_sha256": "1213c6d8e856fe6f5c8daafb96c8ee4170c7baf5777349f427d0a9d3f03e839d",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-selected.jpg",
+    "state": "restore-selected",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/04-valid-backup-metadata.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "13ee01d28c323e2f135ee2b9bbaafe397050ba1fa73478ef28a61f787bd049b3",
+    "name": "有效备份信息",
+    "result": "从真实备份读取日期、备注和曲目数。",
+    "reference_sha256": "48418d68020c403a90ad1c5b8d2e8cf9cee3bc60511b8d881c2377e7e18e65a0",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-confirm.jpg",
+    "state": "restore-confirm",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "a0a8d328df7fdfc638fe902745743cf5dd2adc5665ae71518c89e2dc73edbb46",
+    "name": "原地址恢复确认",
+    "result": "显示来源和原地址模式；Return 不执行恢复。",
+    "reference_sha256": "c7a79436d3b8015f03362c1020dc7cf4368dca7c3f1b38bcb71f20b9cc9bfbeb",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-working.jpg",
+    "state": "restore-working",
+    "reference": "Reference-Windows-2026-11-26-restore/capture/01-progress-72.png",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "fca1dc66da0d4374a595d646077c719828e4c8afc6ddce5d9f8235dd3a33586e",
+    "name": "恢复运行",
+    "result": "实际保存恢复前备份阶段；当前无可靠百分比，停止按钮禁用。",
+    "reference_sha256": "21fa09e03501b8ead7e9c21d195bd48c34237ea45ae44346997a5549aac720b4",
+    "reference_crop": [
+      208,
+      152,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      1696,
+      1592
+    ]
+  },
+  {
+    "file": "mac/restore-complete.jpg",
+    "state": "restore-complete",
+    "reference": "Reference-Windows-2026-11-26-restore/capture/02-completed.png",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "02e0fb27d575dcb338389db3ef5f2711f8d17745195cf4dab867d1526898e788",
+    "name": "恢复完成",
+    "result": "真实恢复成功；恢复前备份路径保留在提示中。",
+    "reference_sha256": "87e07cffd173d61662f2fd998d7a387ca40658f3e17d74d69511eb633b7ffffa",
+    "reference_crop": [
+      208,
+      152,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      1696,
+      1592
+    ]
+  },
+  {
+    "file": "mac/restore-custom.jpg",
+    "state": "restore-custom",
+    "reference": "Reference-Windows-2026-11-24/capture/06-dialogs/restore-custom-destination.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "ab78edc9351ad384e24c048d71e127a214033e970bcad315e8246d9e259783c1",
+    "name": "指定文件夹",
+    "result": "真实选择目录；参考用于布局，截图中的动态源数据不同。",
+    "reference_sha256": "e947cbc231f6c8c1a2c2b4c09e82bb5330504882e25aed050e412e9d1b985438",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-custom-confirm.jpg",
+    "state": "restore-custom-confirm",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "afed57e39d05aedacb468097d7986d1257954bc8361aed6b4944edc4124472aa",
+    "name": "指定文件夹确认",
+    "result": "显示实际 Music Center 目标路径；沿用原版确认布局。",
+    "reference_sha256": "c7a79436d3b8015f03362c1020dc7cf4368dca7c3f1b38bcb71f20b9cc9bfbeb",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-runtime-error.jpg",
+    "state": "restore-runtime-error",
+    "reference": "Reference-Windows-2026-11-26-restore/capture/03-runtime-write-failed.png",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "0d9c9bf854af2ebfb50ab49bc51f112154215a39a23a3a356a6e74a1c46f3d3b",
+    "name": "恢复运行失败",
+    "result": "确认后制造同名目标冲突，保留原目标，错误后返回选择页。",
+    "reference_sha256": "9c9186ed0434b225ba02cb29b484ab09f25c77746f62d47054fe1562ce79f5b7",
+    "reference_crop": null
+  },
+  {
+    "file": "mac/backup-compact.jpg",
+    "state": "backup-compact",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "102f79d0e5ac9c77387870b31f63d966f3d2229a62fa009f17171a56bb6d3f3a",
+    "name": "紧凑备份",
+    "result": "800×550 内容区域，正文可滚动，底部按钮固定。",
+    "reference_sha256": "ae855b3e1662257da39f820a0592fa549663baca9677862c1c503d07cc829261",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  },
+  {
+    "file": "mac/restore-compact.jpg",
+    "state": "restore-compact",
+    "reference": "Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg",
+    "method": "production QA window capture; panel crop; JPEG quality 85",
+    "sha256": "47ae997c1210f9ecb6c4bd2fb4d6437690ca7b731193d1870cd9c6181c83ace8",
+    "name": "紧凑恢复",
+    "result": "800×550 内容区域，正文可滚动，底部按钮固定。",
+    "reference_sha256": "f210c8941faa90595e3f20f9a7161e870e5de1f8d4376856b60e035f963f9eb4",
+    "reference_crop": [
+      726,
+      112,
+      1280,
+      1280
+    ],
+    "reference_size": [
+      2732,
+      1536
+    ]
+  }
+]

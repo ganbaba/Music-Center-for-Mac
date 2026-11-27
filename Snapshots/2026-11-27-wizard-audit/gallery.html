@@ -1,0 +1,93 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2026-11-27 · 备份恢复逐状态验收</title><style>
+body{font-family:system-ui,sans-serif;max-width:1400px;margin:32px auto;padding:0 20px;background:#f2f2f2;color:#222}
+h1{font-size:26px}nav{display:flex;gap:10px;flex-wrap:wrap}a{color:#6b501b}article{margin:32px 0;padding:20px;background:white;border:1px solid #ddd}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}figure{margin:0}figcaption{margin-bottom:10px;font-weight:600}
+.frame{position:relative;aspect-ratio:1;overflow:hidden;background:#eee;border:1px solid #ddd}.frame img{position:absolute}
+.mac{display:block;width:100%;height:auto;border:1px solid #ddd}.full{width:100%;height:auto}.missing{padding:30px;background:#eee}
+@media(max-width:800px){.pair{grid-template-columns:1fr}}</style>
+<h1>备份 / 恢复 · 逐状态验收 · 2026-11-27</h1>
+<p>左：Mac 生产视图的实际 QA 截图。右：Windows 原版参考。点击图片打开原图。正常面板按 640×640 逻辑尺寸对照，紧凑模式保留滚动。</p>
+<p>进度为真实等待和任务阶段；原地址与文件格式、百分比、停止能力等差异见 <a href="README.md">验收说明</a>。不代表所有像素或业务能力已完全相同。</p><nav>
+<a href="#backup-introduction">备份介绍</a>
+<a href="#backup-searching">搜索等待</a>
+<a href="#backup-empty">备份空配置</a>
+<a href="#backup-filled">备份填写配置</a>
+<a href="#backup-confirm">备份确认</a>
+<a href="#backup-writing">实际写入</a>
+<a href="#backup-complete">备份完成</a>
+<a href="#backup-write-error">备份运行失败</a>
+<a href="#restore-introduction">恢复介绍</a>
+<a href="#restore-empty">恢复空选择</a>
+<a href="#restore-invalid">无效备份</a>
+<a href="#restore-selected">有效备份信息</a>
+<a href="#restore-confirm">原地址恢复确认</a>
+<a href="#restore-working">恢复运行</a>
+<a href="#restore-complete">恢复完成</a>
+<a href="#restore-custom">指定文件夹</a>
+<a href="#restore-custom-confirm">指定文件夹确认</a>
+<a href="#restore-runtime-error">恢复运行失败</a>
+<a href="#backup-compact">紧凑备份</a>
+<a href="#restore-compact">紧凑恢复</a>
+</nav>
+<article id="backup-introduction"><h2>备份介绍</h2><p>保留原图信息层级，并说明 Mac 备份范围。</p><div class="pair"><figure><figcaption>Mac · backup-introduction</figcaption><a href="mac/backup-introduction.jpg"><img class="mac" loading="lazy" src="mac/backup-introduction.jpg" alt="Mac 备份介绍"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/01-entry.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/01-entry.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份介绍"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/01-entry.jpg</small></p>
+</figure></div></article>
+<article id="backup-searching"><h2>搜索等待</h2><p>实际 SQLite 等待阶段；当前没有该瞬间的 Windows 原图。</p><div class="pair"><figure><figcaption>Mac · backup-searching</figcaption><a href="mac/backup-searching.jpg"><img class="mac" loading="lazy" src="mac/backup-searching.jpg" alt="Mac 搜索等待"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<div class="missing">没有正在搜索阶段的原图。名为 02-searching.jpg 的既有文件实际显示搜索已完成。</div>
+</figure></div></article>
+<article id="backup-empty"><h2>备份空配置</h2><p>初始名称和路径为空，下一步禁用。</p><div class="pair"><figure><figcaption>Mac · backup-empty</figcaption><a href="mac/backup-empty.jpg"><img class="mac" loading="lazy" src="mac/backup-empty.jpg" alt="Mac 备份空配置"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份空配置"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg</small></p>
+</figure></div></article>
+<article id="backup-filled"><h2>备份填写配置</h2><p>真实路径、名称与多行备注；32 字符限制已验证。</p><div class="pair"><figure><figcaption>Mac · backup-filled</figcaption><a href="mac/backup-filled.jpg"><img class="mac" loading="lazy" src="mac/backup-filled.jpg" alt="Mac 备份填写配置"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/04-options-filled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/04-options-filled.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份填写配置"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/04-options-filled.jpg</small></p>
+</figure></div></article>
+<article id="backup-confirm"><h2>备份确认</h2><p>显示真实大小和目标；Return 不开始写入。</p><div class="pair"><figure><figcaption>Mac · backup-confirm</figcaption><a href="mac/backup-confirm.jpg"><img class="mac" loading="lazy" src="mac/backup-confirm.jpg" alt="Mac 备份确认"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/05-ready-to-start.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/05-ready-to-start.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份确认"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/05-ready-to-start.jpg</small></p>
+</figure></div></article>
+<article id="backup-writing"><h2>实际写入</h2><p>真实备份任务；Escape 不终止，停止按钮保留。</p><div class="pair"><figure><figcaption>Mac · backup-writing</figcaption><a href="mac/backup-writing.jpg"><img class="mac" loading="lazy" src="mac/backup-writing.jpg" alt="Mac 实际写入"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/15-backup-progress-100-unfilled.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/15-backup-progress-100-unfilled.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 实际写入"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/15-backup-progress-100-unfilled.jpg</small></p>
+</figure></div></article>
+<article id="backup-complete"><h2>备份完成</h2><p>备份实际生成，3 条曲目与备注已读回核对。</p><div class="pair"><figure><figcaption>Mac · backup-complete</figcaption><a href="mac/backup-complete.jpg"><img class="mac" loading="lazy" src="mac/backup-complete.jpg" alt="Mac 备份完成"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/06-completed.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/06-completed.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份完成"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/06-completed.jpg</small></p>
+</figure></div></article>
+<article id="backup-write-error"><h2>备份运行失败</h2><p>确认后将临时目标目录替换为文件触发；确认后返回配置。</p><div class="pair"><figure><figcaption>Mac · backup-write-error</figcaption><a href="mac/backup-write-error.jpg"><img class="mac" loading="lazy" src="mac/backup-write-error.jpg" alt="Mac 备份运行失败"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/13-runtime-write-failed.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/13-runtime-write-failed.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 备份运行失败"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/13-runtime-write-failed.jpg</small></p>
+</figure></div></article>
+<article id="restore-introduction"><h2>恢复介绍</h2><p>原图说明结构，查看帮助打开真实本地说明。</p><div class="pair"><figure><figcaption>Mac · restore-introduction</figcaption><a href="mac/restore-introduction.jpg"><img class="mac" loading="lazy" src="mac/restore-introduction.jpg" alt="Mac 恢复介绍"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/01-entry.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/01-entry.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 恢复介绍"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/01-entry.jpg</small></p>
+</figure></div></article>
+<article id="restore-empty"><h2>恢复空选择</h2><p>日期和备注框、两种地址选项均显示；下一步禁用。</p><div class="pair"><figure><figcaption>Mac · restore-empty</figcaption><a href="mac/restore-empty.jpg"><img class="mac" loading="lazy" src="mac/restore-empty.jpg" alt="Mac 恢复空选择"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 恢复空选择"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg</small></p>
+</figure></div></article>
+<article id="restore-invalid"><h2>无效备份</h2><p>Mac 损坏文件拒绝；Windows 参考是无效备份目录，输入形式不同。</p><div class="pair"><figure><figcaption>Mac · restore-invalid</figcaption><a href="mac/restore-invalid.jpg"><img class="mac" loading="lazy" src="mac/restore-invalid.jpg" alt="Mac 无效备份"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/03-invalid-backup-directory.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/03-invalid-backup-directory.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 无效备份"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/03-invalid-backup-directory.jpg</small></p>
+</figure></div></article>
+<article id="restore-selected"><h2>有效备份信息</h2><p>从真实备份读取日期、备注和曲目数。</p><div class="pair"><figure><figcaption>Mac · restore-selected</figcaption><a href="mac/restore-selected.jpg"><img class="mac" loading="lazy" src="mac/restore-selected.jpg" alt="Mac 有效备份信息"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/04-valid-backup-metadata.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/04-valid-backup-metadata.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 有效备份信息"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/04-valid-backup-metadata.jpg</small></p>
+</figure></div></article>
+<article id="restore-confirm"><h2>原地址恢复确认</h2><p>显示来源和原地址模式；Return 不执行恢复。</p><div class="pair"><figure><figcaption>Mac · restore-confirm</figcaption><a href="mac/restore-confirm.jpg"><img class="mac" loading="lazy" src="mac/restore-confirm.jpg" alt="Mac 原地址恢复确认"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 原地址恢复确认"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg</small></p>
+</figure></div></article>
+<article id="restore-working"><h2>恢复运行</h2><p>实际保存恢复前备份阶段；当前无可靠百分比，停止按钮禁用。</p><div class="pair"><figure><figcaption>Mac · restore-working</figcaption><a href="mac/restore-working.jpg"><img class="mac" loading="lazy" src="mac/restore-working.jpg" alt="Mac 恢复运行"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-restore/capture/01-progress-72.png"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-restore/capture/01-progress-72.png" style="width:132.5%;left:-16.25%;top:-11.875%" alt="Windows 恢复运行"></div></a><p><small>Reference-Windows-2026-11-26-restore/capture/01-progress-72.png</small></p>
+</figure></div></article>
+<article id="restore-complete"><h2>恢复完成</h2><p>真实恢复成功；恢复前备份路径保留在提示中。</p><div class="pair"><figure><figcaption>Mac · restore-complete</figcaption><a href="mac/restore-complete.jpg"><img class="mac" loading="lazy" src="mac/restore-complete.jpg" alt="Mac 恢复完成"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-restore/capture/02-completed.png"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-restore/capture/02-completed.png" style="width:132.5%;left:-16.25%;top:-11.875%" alt="Windows 恢复完成"></div></a><p><small>Reference-Windows-2026-11-26-restore/capture/02-completed.png</small></p>
+</figure></div></article>
+<article id="restore-custom"><h2>指定文件夹</h2><p>真实选择目录；参考用于布局，截图中的动态源数据不同。</p><div class="pair"><figure><figcaption>Mac · restore-custom</figcaption><a href="mac/restore-custom.jpg"><img class="mac" loading="lazy" src="mac/restore-custom.jpg" alt="Mac 指定文件夹"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-24/capture/06-dialogs/restore-custom-destination.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-24/capture/06-dialogs/restore-custom-destination.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 指定文件夹"></div></a><p><small>Reference-Windows-2026-11-24/capture/06-dialogs/restore-custom-destination.jpg</small></p>
+</figure></div></article>
+<article id="restore-custom-confirm"><h2>指定文件夹确认</h2><p>显示实际 Music Center 目标路径；沿用原版确认布局。</p><div class="pair"><figure><figcaption>Mac · restore-custom-confirm</figcaption><a href="mac/restore-custom-confirm.jpg"><img class="mac" loading="lazy" src="mac/restore-custom-confirm.jpg" alt="Mac 指定文件夹确认"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 指定文件夹确认"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/05-ready-to-start.jpg</small></p>
+</figure></div></article>
+<article id="restore-runtime-error"><h2>恢复运行失败</h2><p>确认后制造同名目标冲突，保留原目标，错误后返回选择页。</p><div class="pair"><figure><figcaption>Mac · restore-runtime-error</figcaption><a href="mac/restore-runtime-error.jpg"><img class="mac" loading="lazy" src="mac/restore-runtime-error.jpg" alt="Mac 恢复运行失败"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-restore/capture/03-runtime-write-failed.png"><img class="full" loading="lazy" src="../../Reference-Windows-2026-11-26-restore/capture/03-runtime-write-failed.png" alt="Windows 恢复运行失败"></a><p><small>Reference-Windows-2026-11-26-restore/capture/03-runtime-write-failed.png</small></p>
+</figure></div></article>
+<article id="backup-compact"><h2>紧凑备份</h2><p>800×550 内容区域，正文可滚动，底部按钮固定。</p><div class="pair"><figure><figcaption>Mac · backup-compact</figcaption><a href="mac/backup-compact.jpg"><img class="mac" loading="lazy" src="mac/backup-compact.jpg" alt="Mac 紧凑备份"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 紧凑备份"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/01-backup/03-options-empty.jpg</small></p>
+</figure></div></article>
+<article id="restore-compact"><h2>紧凑恢复</h2><p>800×550 内容区域，正文可滚动，底部按钮固定。</p><div class="pair"><figure><figcaption>Mac · restore-compact</figcaption><a href="mac/restore-compact.jpg"><img class="mac" loading="lazy" src="mac/restore-compact.jpg" alt="Mac 紧凑恢复"></a></figure><figure><figcaption>Windows 原版</figcaption>
+<a href="../../Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg"><div class="frame"><img loading="lazy" src="../../Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg" style="width:213.4375%;left:-56.71874999999999%;top:-8.75%" alt="Windows 紧凑恢复"></div></a><p><small>Reference-Windows-2026-11-26-tools/capture/02-restore/02-select-backup-empty.jpg</small></p>
+</figure></div></article>
+</html>

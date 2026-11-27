@@ -3,8 +3,8 @@ import SwiftUI
 
 struct LibraryWizardPresentation<Panel: View>: ViewModifier {
     let isPresented: Bool
-    var width: CGFloat = 620
-    var preferredHeight: CGFloat = 560
+    var width: CGFloat = 640
+    var preferredHeight: CGFloat = 640
     @ViewBuilder let panel: () -> Panel
 
     func body(content: Content) -> some View {
@@ -29,10 +29,10 @@ struct LibraryWizardPresentation<Panel: View>: ViewModifier {
 
 struct LibraryWizardPanel<Contents: View, Controls: View>: View {
     let title: String
-    var headerHeight: CGFloat = 48
-    var contentInset: CGFloat = 37
-    var contentTop: CGFloat = 12
-    var fontSize: CGFloat = 12
+    var headerHeight: CGFloat = 60
+    var contentInset: CGFloat = 50
+    var contentTop: CGFloat = 20
+    var fontSize: CGFloat = 14
     var closeDisabled = false
     let close: () -> Void
     var failure: String? = nil
@@ -46,15 +46,16 @@ struct LibraryWizardPanel<Contents: View, Controls: View>: View {
                 .overlay(alignment: .trailing) {
                     Button(action: close) {
                         Image(systemName: "xmark").font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color(white: 0.48)).frame(width: 36, height: 36)
+                            .foregroundStyle(Color(white: closeDisabled ? 0.83 : 0.48)).frame(width: 36, height: 36)
                             .contentShape(Rectangle())
-                    }.buttonStyle(.plain).disabled(closeDisabled)
+                    }.buttonStyle(.plain).keyboardShortcut(.cancelAction).disabled(closeDisabled)
                         .padding(.trailing, 6).accessibilityLabel("关闭" + title)
                 }
             ScrollView {
                 VStack(alignment: .leading, spacing: 15, content: contents)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, contentInset).padding(.top, contentTop).padding(.bottom, 12)
+                    .padding(.leading, contentInset).padding(.trailing, 40)
+                    .padding(.top, contentTop).padding(.bottom, 12)
             }
             HStack(spacing: 8) {
                 Spacer(minLength: 0)
@@ -87,9 +88,32 @@ struct LibraryWizardPrimary: View {
 
     var body: some View {
         Button(action: action) {
-            Text(title).foregroundStyle(.white).frame(width: 112, height: 27)
+            Text(title).foregroundStyle(.white).frame(width: 120, height: 32)
                 .background(SettingsStyle.gold.opacity(enabled ? 1 : 0.35)).contentShape(Rectangle())
         }.buttonStyle(.plain).keyboardShortcut(isDefault ? .defaultAction : nil).disabled(!enabled)
+    }
+}
+
+struct LibraryWizardSecondary: View {
+    let title: String
+    var width: CGFloat = 120
+    let action: () -> Void
+    @Environment(\.isEnabled) private var enabled
+
+    init(_ title: String, width: CGFloat = 120, action: @escaping () -> Void) {
+        self.title = title
+        self.width = width
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title).frame(width: width, height: 32)
+                .foregroundStyle(enabled ? SettingsStyle.ink : Color(white: 0.58))
+                .background(.white)
+                .overlay { Rectangle().strokeBorder(enabled ? SettingsStyle.ink : Color(white: 0.65)) }
+                .contentShape(Rectangle())
+        }.buttonStyle(.plain).accessibilityLabel(title)
     }
 }
 
@@ -97,9 +121,10 @@ struct LibraryWizardProgress: View {
     let title: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 19) {
+        VStack(alignment: .leading, spacing: 35) {
             Text(title)
             ProgressView().progressViewStyle(.linear).tint(SettingsStyle.gold).accessibilityLabel(title)
+                .padding(.horizontal, 50)
         }
     }
 }
@@ -114,7 +139,7 @@ struct BackupWizard: View {
     let close: () -> Void
     @State private var page = Page.introduction
     @State private var folder: URL?
-    @State private var name = "Music Center"
+    @State private var name = ""
     @State private var notes = ""
     @State private var size: Int64?
     @State private var choosingFolder = false
@@ -158,7 +183,7 @@ struct BackupWizard: View {
             footer
         }
         .onExitCommand {
-            if failure != nil { dismissFailure() } else { cancel() }
+            if failure != nil { dismissFailure() } else if page != .writing { cancel() }
         }
         .onDisappear { work?.cancel() }
     }
@@ -166,53 +191,65 @@ struct BackupWizard: View {
     @ViewBuilder private var bodyContent: some View {
         switch page {
         case .introduction:
-            Text("将 Music Center 管理的数据备份到所选文件夹。")
-            Text("备份内容").fontWeight(.semibold)
-            Text("曲库记录、播放列表、播放历史和设置。音频文件继续引用原始位置。")
-                .fixedSize(horizontal: false, vertical: true)
-            Text("点击「下一步」估算备份大小。")
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Music Center 管理的数据可备份至硬盘上的单独位置，或外接硬盘等便携式媒体。")
+                Text("备注：")
+                Text("・请勿在备份时移除便携式媒体。\n・如果电脑正在以电池电力运行，建议连接至电源。")
+                Text("点击「下一步」，开始搜索备份数据。")
+                Text("搜索时间取决于数据量。")
+                Text("Mac 备份保存曲库记录和设置，音频继续引用原始位置。")
+                    .foregroundStyle(SettingsStyle.heading).padding(.top, 8)
+            }.fixedSize(horizontal: false, vertical: true)
         case .searching:
-            LibraryWizardProgress(title: "正在估算备份大小…")
+            LibraryWizardProgress(title: "正在搜索备份数据…")
         case .settings:
-            Text("备份数据大小：约 " + sizeLabel)
-            VStack(alignment: .leading, spacing: 5) {
-                Text("备份数据保存位置")
-                HStack(spacing: 10) {
-                    Text(folder?.path ?? "请选择文件夹")
-                        .lineLimit(1).truncationMode(.middle).help(folder?.path ?? "请选择文件夹")
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6)
-                        .frame(height: 27).border(Color(white: 0.63))
-                    SettingsAction("浏览…", width: 78, action: chooseFolder).disabled(choosingFolder)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("备份数据搜索已完成。\n点击[浏览]指定保存备份数据的硬盘或可移动媒体。")
+                    .padding(.bottom, 30)
+                Text("备份数据大小：约 " + sizeLabel).padding(.bottom, 30)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("备份数据保存地址：")
+                    HStack(spacing: 10) {
+                        Text(folder?.path ?? "")
+                            .lineLimit(1).truncationMode(.middle).help(folder?.path ?? "请选择文件夹")
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6)
+                            .frame(height: 32).border(Color(white: 0.63))
+                        LibraryWizardSecondary("浏览…", width: 80, action: chooseFolder).disabled(choosingFolder)
+                    }.frame(width: 494)
+                }.padding(.bottom, 30)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("备份数据名称（最多32字符）：")
+                    TextField("", text: $name).textFieldStyle(.plain)
+                        .padding(.horizontal, 6).frame(width: 400, height: 32).border(Color(white: 0.63))
+                        .accessibilityLabel("备份数据名称")
+                        .onChange(of: name) { issue = nil }
                 }
-            }
-            VStack(alignment: .leading, spacing: 5) {
-                Text("备份数据名称（最多 32 个字符）")
-                TextField("备份数据名称", text: $name).textFieldStyle(.plain)
-                    .padding(.horizontal, 6).frame(height: 27).border(Color(white: 0.63))
-                    .accessibilityLabel("备份数据名称")
-                    .onChange(of: name) { issue = nil }
-            }
-            if let message = nameIssue ?? issue {
-                Text(message).foregroundStyle(Color(red: 0.68, green: 0.12, blue: 0.09))
-            }
-            VStack(alignment: .leading, spacing: 5) {
-                Text("备注")
-                TextEditor(text: $notes)
-                    .padding(3).frame(height: 80).border(Color(white: 0.63))
-                    .accessibilityLabel("备注")
+                if let message = issue ?? (name.isEmpty ? nil : nameIssue) {
+                    Text(message).foregroundStyle(Color(red: 0.68, green: 0.12, blue: 0.09)).padding(.top, 5)
+                }
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("备注：\n备注中可输入任何文本。恢复时可检查该备注。")
+                    TextEditor(text: $notes)
+                        .padding(3).frame(height: 60).border(Color(white: 0.63))
+                        .accessibilityLabel("备注")
+                }.padding(.top, 30)
             }
         case let .ready(url):
-            Text("已准备备份数据。点击「开始」保存备份。")
-            Text("备份数据大小：约 " + sizeLabel)
-            Text("备份数据保存地址：\(url.path)")
-                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("备份数据保存准备已完成。\n点击【开始】，开始写入。").padding(.bottom, 30)
+                Text("备份数据大小：约 " + sizeLabel)
+                Text("备份数据保存地址：\(url.path)")
+                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            }
         case .writing:
             LibraryWizardProgress(title: stopping ? "正在停止备份…" : "正在备份数据…")
-            Text("备份期间请保持目标磁盘连接。")
+            Text("备份操作过程中请勿关闭计算机或取出媒体。").padding(.top, 60)
         case let .complete(url):
-            Text("备份已完成。")
-            Text("备份数据保存地址：\(url.path)")
-                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("备份已完成。")
+                Text("备份数据保存地址：\(url.path)")
+                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+            }
         }
     }
 
@@ -220,18 +257,18 @@ struct BackupWizard: View {
         switch page {
         case .introduction:
             LibraryWizardPrimary(title: "下一步", action: estimate)
-            SettingsAction("取消", action: cancel)
+            LibraryWizardSecondary("取消", action: cancel)
         case .searching:
-            SettingsAction("取消", action: cancel)
+            LibraryWizardSecondary("取消", action: cancel)
         case .settings:
             LibraryWizardPrimary(title: "下一步", enabled: destination != nil && !choosingFolder, action: prepare)
-            SettingsAction("取消", action: cancel).disabled(choosingFolder)
+            LibraryWizardSecondary("取消", action: cancel).disabled(choosingFolder)
         case let .ready(url):
-            SettingsAction("后退") { page = .settings }
-            LibraryWizardPrimary(title: "开始") { start(url) }
-            SettingsAction("取消", action: cancel)
+            LibraryWizardSecondary("后退") { page = .settings }
+            LibraryWizardPrimary(title: "开始", isDefault: false) { start(url) }
+            LibraryWizardSecondary("取消", action: cancel)
         case .writing:
-            SettingsAction("停止", action: cancel).disabled(stopping || work == nil)
+            LibraryWizardSecondary("停止", action: cancel).disabled(stopping || work == nil)
         case .complete:
             LibraryWizardPrimary(title: "确定", action: close)
         }
@@ -305,7 +342,7 @@ struct BackupWizard: View {
             } catch {
                 failure = FileManager.default.fileExists(atPath: url.path)
                     ? "此处已有同名项目。请更改备份名称或选择其他文件夹。"
-                    : "无法写入备份目的地。请检查保存位置和剩余空间，或选择其他文件夹。"
+                    : "无法写入指定文件夹。无法备份。请指定其他文件夹。"
             }
         }
     }
